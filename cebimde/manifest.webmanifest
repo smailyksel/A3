@@ -1,7 +1,7 @@
 {
   "name": "Cebimde",
   "short_name": "Cebimde",
-  "description": "Sık paylaşılan bilgiler tek dokunuşla kopyalanır, önemli tarihlere kaç gün kaldığı görünür. Kayıtlar yalnızca bu cihazda tutulur.",
+  "description": "Notlar, hazır bilgiler, önemli tarihler, tıbbi kayıtlar ve dekontlar. Kayıtlar yalnızca bu cihazda tutulur.",
   "lang": "tr",
   "dir": "ltr",
   "id": "./",
@@ -17,7 +17,9 @@
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Hazır Bilgiler", "url": "./", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
-    { "name": "Önemli Tarihler", "url": "./#tarihler", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+    { "name": "Notlar", "url": "./", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Hazır Bilgiler", "url": "./#bilgiler", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Önemli Tarihler", "url": "./#tarihler", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Dekontlar", "url": "./#dekont", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }

@@ -1,5 +1,5 @@
-/* Cebimde: sık paylaşılan bilgiler ve önemli tarihler.
-   Telefonda altta iki sekme, geniş ekranda solda menü. Tek, koyu görünüm:
+/* Cebimde: notlar, hazır bilgiler, önemli tarihler, tıbbi kayıtlar, dekontlar.
+   Telefonda altta beş sekme, geniş ekranda solda menü. Tek, koyu görünüm:
    gece siyahı zemin ve altın vurgu. Yazı tipleri uygulamayla birlikte gelir,
    dışarıya istek gitmez. */
 
@@ -168,7 +168,7 @@ a { color: inherit; }
 
 .alt {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(2, 1fr);
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   padding: 5px calc(4px + env(safe-area-inset-right, 0px)) calc(5px + env(safe-area-inset-bottom, 0px)) calc(4px + env(safe-area-inset-left, 0px));
   background: var(--cam);
   -webkit-backdrop-filter: blur(14px);
@@ -178,10 +178,10 @@ a { color: inherit; }
 .alt button {
   display: grid; justify-items: center; align-content: center; gap: 3px;
   min-height: 52px; padding: 4px 2px;
-  font-size: 0.75rem; font-weight: 500; letter-spacing: 0.01em;
+  font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.01em;
   color: var(--soluk); border-radius: var(--r-k);
 }
-.alt .ikon { width: 23px; height: 23px; display: block; }
+.alt .ikon { width: 22px; height: 22px; display: block; }
 .alt button[aria-current="page"] { color: var(--vurgu); }
 .alt-ikon { position: relative; display: block; }
 
@@ -361,6 +361,62 @@ input[type="search"]::-webkit-search-cancel-button { filter: invert(0.75); }
 .tarih.gecti .gun b, .tarih.gecti strong { color: var(--soluk); }
 .tarih.gecti { padding-bottom: 12px; }
 @media (min-width: 900px) { .tarihler { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; } }
+
+/* ---------- Notlar ---------- */
+
+.notlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 10px; }
+.not-kart { display: flex; flex-direction: column; gap: 6px; min-height: 124px; padding: 14px; text-align: left; align-items: stretch; }
+.not-kart:hover { border-color: var(--cizgi-guclu); }
+.not-kart.sabit { border-color: var(--cizgi-guclu); }
+.not-kart h3 { display: flex; align-items: flex-start; gap: 6px; margin: 0; font: 600 0.9375rem/1.35 var(--f-govde); overflow-wrap: anywhere; }
+.not-kart h3 .ikon { color: var(--vurgu); margin-top: 3px; }
+.not-kart p {
+  flex: 1; color: var(--soluk); font-size: 0.875rem; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5; overflow: hidden;
+}
+.not-kart time { font-size: 0.75rem; color: var(--silik); }
+.not-metin { min-height: 40vh; }
+.not-baslik { font-weight: 600; }
+@media (min-width: 700px) { .notlar { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; } }
+
+/* ---------- Tıbbi kayıtlar ve dekontlar ---------- */
+
+.belgeler { display: grid; gap: 12px; }
+.belge { min-width: 0; padding: 0 0 2px; }
+.belge-govde { display: grid; gap: 3px; width: 100%; padding: 14px 16px 12px; text-align: left; }
+.belge-govde strong { font-weight: 500; font-size: 1rem; line-height: 1.4; overflow-wrap: anywhere; }
+.belge-ust { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.belge-ust strong { flex: 1; min-width: 0; }
+.tutar { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--vurgu-acik); }
+.belge-not { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.belge-dosyalar { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 12px; }
+.dosya-cip {
+  display: inline-flex; align-items: center; gap: 7px; max-width: 100%;
+  min-height: 38px; padding: 0 12px 0 10px;
+  border: 1px solid var(--cizgi); border-radius: var(--r-k);
+  color: var(--yazi); font-size: 0.875rem; font-weight: 500;
+}
+.dosya-cip:hover { border-color: var(--vurgu); }
+.dosya-cip .ikon { color: var(--vurgu); width: 18px; height: 18px; }
+.dosya-cip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bolum-bas .kucuk { font-variant-numeric: tabular-nums; }
+@media (min-width: 900px) { .belgeler { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; align-items: start; } }
+
+.iki { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dosya-liste { display: grid; gap: 6px; }
+.dosya-satir { display: flex; align-items: center; gap: 4px; min-height: 46px; padding: 0 2px 0 12px; border: 1px solid var(--ayrac); border-radius: var(--r-k); background: var(--zemin2); }
+.dosya-satir > .ikon { color: var(--vurgu); }
+.dosya-satir button.ad { flex: 1; min-width: 0; padding: 10px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9375rem; }
+.dosya-satir small { flex: none; color: var(--soluk); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.dosya-ekle { justify-self: start; }
+
+.gosterici { width: min(920px, calc(100vw - 16px)); display: none; flex-direction: column; overflow: hidden; }
+.gosterici[open] { display: flex; }
+.gosterici-ic { flex: 1; min-height: 120px; overflow: auto; -webkit-overflow-scrolling: touch; padding: 4px 12px 12px; background: var(--zemin); display: grid; gap: 10px; align-content: start; justify-items: center; }
+.gosterici-ic img, .gosterici-ic canvas { display: block; max-width: 100%; height: auto; border-radius: 4px; background: #fff; }
+.gosterici-ic p { padding: 28px 12px; color: var(--soluk); text-align: center; }
+.gosterici .pencere-bas h2 { font: 500 1rem/1.4 var(--f-govde); letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.gosterici .pencere-alt { padding: 12px 16px 14px; border-top: 1px solid var(--ayrac); }
 
 /* ---------- Ayarlar ---------- */
 

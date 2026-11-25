@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cebimde</title>
-<meta name="description" content="Sık paylaşılan bilgiler tek dokunuşla kopyalanır, önemli tarihlere kaç gün kaldığı görünür. Kayıtlar yalnızca bu cihazda tutulur.">
+<meta name="description" content="Notlar, hazır bilgiler, önemli tarihler, tıbbi kayıtlar ve dekontlar. Kayıtlar yalnızca bu cihazda tutulur.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0d0e11">
 <meta name="color-scheme" content="dark">
@@ -32,6 +32,12 @@
   <symbol id="i-takvim" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M12 11v6M9 14h6"/></symbol>
   <symbol id="i-indir" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/></symbol>
   <symbol id="i-yukle" viewBox="0 0 24 24"><path d="M12 15.5v-11M7.5 9 12 4.5 16.5 9M5 19.5h14"/></symbol>
+  <symbol id="i-not" viewBox="0 0 24 24"><path d="M6 3.5h8.5L19 8v12.5H6z"/><path d="M14.5 3.5V8H19M9 12.5h7M9 16h5"/></symbol>
+  <symbol id="i-tibbi" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></symbol>
+  <symbol id="i-dekont" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2.4-1.6-2.4 1.6-2.4-1.6-2.4 1.6L6 20.5z"/><path d="M9 8.5h6M9 12h6"/></symbol>
+  <symbol id="i-dosya" viewBox="0 0 24 24"><path d="M6.5 3.5h7.5L18.5 8v12.5h-12z"/><path d="M14 3.5V8h4.5"/></symbol>
+  <symbol id="i-resim" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m5.5 17 4.5-4 3 2.5 3-3 3 3"/></symbol>
+  <symbol id="i-paylas" viewBox="0 0 24 24"><path d="M12 15V4M8 7.5l4-4 4 4M6 11.5V19h12v-7.5"/></symbol>
   <symbol id="i-marka" viewBox="0 0 24 24"><rect x="3.5" y="6" width="14" height="12" rx="2.5"/><path d="M7 11h7M7 14.5h4"/><circle cx="18" cy="7" r="3"/></symbol>
 </svg>
 
@@ -44,8 +50,11 @@
       <span>Cebimde</span>
     </div>
     <nav class="yan-menu" aria-label="Bölümler">
+      <button type="button" data-git="notlar"><svg class="ikon" aria-hidden="true"><use href="#i-not"/></svg><span>Notlar</span></button>
       <button type="button" data-git="bilgiler"><svg class="ikon" aria-hidden="true"><use href="#i-bilgi"/></svg><span>Hazır Bilgiler</span></button>
       <button type="button" data-git="tarihler"><svg class="ikon" aria-hidden="true"><use href="#i-tarih"/></svg><span>Önemli Tarihler</span><b class="rozet" data-rozet hidden></b></button>
+      <button type="button" data-git="tibbi"><svg class="ikon" aria-hidden="true"><use href="#i-tibbi"/></svg><span>Tıbbi Kayıtlar</span></button>
+      <button type="button" data-git="dekont"><svg class="ikon" aria-hidden="true"><use href="#i-dekont"/></svg><span>Dekontlar</span></button>
     </nav>
     <button type="button" class="yan-ayar" data-git="ayarlar"><svg class="ikon" aria-hidden="true"><use href="#i-ayar"/></svg><span>Ayarlar</span></button>
   </aside>
@@ -70,12 +79,16 @@
   <button type="button" class="yuzen-ekle" id="yuzenEkle" data-act="ekle" aria-label="Ekle" hidden><svg class="ikon" aria-hidden="true"><use href="#i-arti"/></svg></button>
 
   <nav class="alt" aria-label="Bölümler">
+    <button type="button" data-git="notlar"><svg class="ikon" aria-hidden="true"><use href="#i-not"/></svg><span>Notlar</span></button>
     <button type="button" data-git="bilgiler"><svg class="ikon" aria-hidden="true"><use href="#i-bilgi"/></svg><span>Bilgiler</span></button>
     <button type="button" data-git="tarihler"><span class="alt-ikon"><svg class="ikon" aria-hidden="true"><use href="#i-tarih"/></svg><b class="rozet" data-rozet hidden></b></span><span>Tarihler</span></button>
+    <button type="button" data-git="tibbi"><svg class="ikon" aria-hidden="true"><use href="#i-tibbi"/></svg><span>Tıbbi</span></button>
+    <button type="button" data-git="dekont"><svg class="ikon" aria-hidden="true"><use href="#i-dekont"/></svg><span>Dekont</span></button>
   </nav>
 </div>
 
 <dialog class="pencere" id="pencere"></dialog>
+<dialog class="pencere gosterici" id="gosterici"></dialog>
 <dialog class="pencere pencere-kucuk" id="onay"></dialog>
 <div class="bildirim" id="bildirim" role="status" aria-live="polite" hidden></div>
 

@@ -7,9 +7,9 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Av. İsmail Savaş Yüksel, Ankara Barosu. Büro adresi: İlkbahar Mahallesi Konrad Adenauer Caddesi 75/7 Çankaya / Ankara.">
 <link rel="canonical" href="https://smailyksel.github.io/A3/">
-<meta name="theme-color" content="#ffc233">
+<meta name="theme-color" content="#14213d">
 <meta name="format-detection" content="telephone=no">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23ffc233'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2314213d'/%3E%3C/svg%3E">
 <link rel="preload" href="assets/fonts/gloock-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
 </head>
@@ -36,7 +36,7 @@
             <span>Savaş</span>
             <span>Yüksel</span>
           </h1>
-          <div class="serit" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div class="serit" aria-hidden="true"><i></i><i></i><i></i></div>
           <p class="tanim">Ceza hukuku, aile hukuku ve sağlık hukuku alanlarında avukatlık ve hukuki danışmanlık hizmeti verilmektedir.</p>
           <dl class="kunye">
             <div><dt>Baro</dt><dd>Ankara Barosu</dd></div>
@@ -45,13 +45,11 @@
           </dl>
         </div>
 
-        <div class="sekiller" aria-hidden="true">
-          <span class="s s1"></span>
-          <span class="s s2"></span>
-          <span class="s s3"></span>
-          <span class="s s4"></span>
-          <span class="s s5"></span>
-        </div>
+        <ul class="dizin" aria-label="Çalışma alanları">
+          <li><a class="dizin-bag dizin-ceza" href="#alan-ceza"><span>Ceza Hukuku</span><span class="dizin-ok" aria-hidden="true">↓</span></a></li>
+          <li><a class="dizin-bag dizin-aile" href="#alan-aile"><span>Aile ve Boşanma Hukuku</span><span class="dizin-ok" aria-hidden="true">↓</span></a></li>
+          <li><a class="dizin-bag dizin-saglik" href="#alan-saglik"><span>Sağlık Hukuku</span><span class="dizin-ok" aria-hidden="true">↓</span></a></li>
+        </ul>
       </div>
     </div>
   </header>
@@ -65,8 +63,7 @@
         </div>
 
         <ul class="alanlar">
-          <li class="alan alan-ceza">
-            <span class="alan-sekil" aria-hidden="true"></span>
+          <li class="alan alan-ceza" id="alan-ceza">
             <h3>Ceza Hukuku</h3>
             <p>Soruşturma ve kovuşturma evrelerinde şüpheli ve sanık müdafiliği ile mağdur, şikayetçi ve katılan vekilliği yürütülmektedir. İfade ve sorgu işlemleri, tutukluluğa itiraz, duruşmaların takibi, istinaf ve temyiz başvuruları ile infaz aşamasına ilişkin işlemler bu kapsamdadır.</p>
             <div class="mevzuat">
@@ -79,8 +76,7 @@
             </div>
           </li>
 
-          <li class="alan alan-aile">
-            <span class="alan-sekil" aria-hidden="true"></span>
+          <li class="alan alan-aile" id="alan-aile">
             <h3>Aile ve Boşanma Hukuku</h3>
             <p>Anlaşmalı ve çekişmeli boşanma davaları ile velayet, çocukla kişisel ilişki kurulması, nafaka, maddi ve manevi tazminat ve mal rejiminin tasfiyesine ilişkin davalar takip edilmektedir. Koruyucu ve önleyici tedbir başvuruları da bu alandaki işler arasındadır.</p>
             <div class="mevzuat">
@@ -92,8 +88,7 @@
             </div>
           </li>
 
-          <li class="alan alan-saglik">
-            <span class="alan-sekil" aria-hidden="true"></span>
+          <li class="alan alan-saglik" id="alan-saglik">
             <h3>Sağlık Hukuku</h3>
             <p>Tıbbi uygulama hatası iddialarına dayanan tazminat davaları ile bu iddialar nedeniyle yürütülen ceza soruşturma ve kovuşturmaları takip edilmektedir. Aydınlatılmış onam, hasta hakları ve hekimin hukuki ve cezai sorumluluğuna ilişkin uyuşmazlıklar bu kapsamdadır.</p>
             <div class="mevzuat">

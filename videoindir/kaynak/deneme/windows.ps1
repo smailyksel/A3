@@ -162,12 +162,13 @@ try {
   Dogrula (Yokla) 'bilgisayarın kendisinden kullanım sürüyor'
 
   # ---------- 5. YouTube'dan gerçek indirme (sonuç yalnızca bildirilir) ----------
-  $yt = 'https://www.youtube.com/watch?v=BaW_jenozKc'
+  # Serbest lisanslı (CC BY) bir kısa film; indirilmesine lisansı izin verir.
+  $yt = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ'
   try {
     $yb = Api 'bilgi' @{ adres = $yt }
     Bilgi "YouTube video bilgisi alındı: '$($yb.baslik)', $($yb.sure) sn"
     $yid = (Api 'indir' @{ adres = $yt; tur = 'video'; kalite = '720' }).id
-    $yis = IsiBekle $yid 240
+    $yis = IsiBekle $yid 420
     if ($yis.durum -eq 'bitti') {
       $ya = (& $ffprobe -v error -show_entries stream=codec_name,height -of csv=p=0 (Join-Path $inen $yis.dosyaAdi)) -join ' '
       Bilgi ("YouTube'dan gerçek indirme BAŞARILI: {0}, {1:N0} bayt, akışlar: {2}" -f $yis.dosyaAdi, $yis.boyut, $ya)
@@ -175,7 +176,9 @@ try {
       Bilgi "YouTube'dan gerçek indirme bu sunucuda olmadı: $($yis.hata) | $($yis.ayrinti)"
     }
   } catch {
-    Bilgi "YouTube bu sunucudan gelen isteği geri çevirdi: $($_.ErrorDetails.Message) $($_.Exception.Message)"
+    $neden = "$($_.ErrorDetails.Message)"
+    try { $neden = ($neden | ConvertFrom-Json).hata } catch { }
+    Bilgi "YouTube bu sunucudan gelen isteği geri çevirdi: $neden"
   }
 
   # ---------- 6. kapatma ----------
@@ -205,10 +208,20 @@ try {
   Dogrula (Test-Path $yerlesik) 'program kalıcı klasörüne kopyalandı'
   $calisan = @(Get-Process -Name 'VideoIndir' -ErrorAction SilentlyContinue)
   Dogrula ($calisan.Count -eq 1 -and $calisan[0].Path -eq $yerlesik) "çalışan tek işlem kalıcı klasördeki kopya ($($calisan.Path -join ', '))"
-  Dogrula (Test-Path -LiteralPath $kisayol) 'masaüstü kısayolu oluştu'
-  $k = (New-Object -ComObject WScript.Shell).CreateShortcut($kisayol)
-  Dogrula ($k.TargetPath -eq $yerlesik) "kısayol kalıcı kopyayı gösteriyor ($($k.TargetPath))"
-  Dogrula ($k.IconLocation -like '*simge.ico*' -and (Test-Path (Join-Path $yer 'simge.ico'))) "kısayolun simgesi yerinde ($($k.IconLocation))"
+  Write-Host ("masaüstündeki kısayollar: " + ((Get-ChildItem -LiteralPath $masaustu -Filter '*.lnk' -ErrorAction SilentlyContinue).Name -join ', '))
+  Dogrula (Test-Path -LiteralPath $kisayol) "masaüstü kısayolu Türkçe adıyla oluştu (Video İndir.lnk)"
+  # Kısayol, adları Unicode okuyan kabuk nesnesiyle denetlenir.
+  $oge = (New-Object -ComObject Shell.Application).Namespace($masaustu).ParseName('Video İndir.lnk')
+  Dogrula ($null -ne $oge -and $oge.IsLink) 'dosya geçerli bir kısayol'
+  $bag = $oge.GetLink
+  Dogrula ($bag.Path -eq $yerlesik) "kısayol kalıcı kopyayı gösteriyor ($($bag.Path))"
+  Dogrula ($bag.WorkingDirectory -eq $yer) "kısayolun çalışma klasörü doğru ($($bag.WorkingDirectory))"
+  Dogrula (Test-Path (Join-Path $yer 'simge.ico')) 'kısayolun simge dosyası yerinde'
+  try {
+    $simgeYolu = ''
+    $null = $bag.GetIconLocation([ref]$simgeYolu)
+    if ($simgeYolu -like '*simge.ico') { Gecti "kısayol bu simgeyi kullanıyor ($simgeYolu)" } else { Bilgi "kısayolun simge yolu okunamadı ya da farklı: '$simgeYolu'" }
+  } catch { Bilgi "kısayolun simge yolu okunamadı: $($_.Exception.Message)" }
 
   Start-Sleep -Seconds 4
   $pencere = @(Get-CimInstance Win32_Process -Filter "Name = 'msedge.exe'" | Where-Object { $_.CommandLine -like "*--app=http://127.0.0.1:$kapi/*" })

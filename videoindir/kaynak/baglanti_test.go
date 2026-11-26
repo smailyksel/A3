@@ -69,6 +69,7 @@ func TestAraDosyaMi(t *testing.T) {
 func TestHatayiCevir(t *testing.T) {
 	for ham, beklenen := range map[string]string{
 		"ERROR: [youtube] abc: Private video. Sign in if you've been granted access to this video": "Bu video özel; indirilemiyor.",
+		"ERROR: [youtube] abc: This video is unavailable":                                          "Video bulunamadı; kaldırılmış ya da erişime kapatılmış olabilir.",
 		"ERROR: [youtube] abc: Video unavailable":                                                  "Video bulunamadı; kaldırılmış ya da erişime kapatılmış olabilir.",
 		"ERROR: [youtube] abc: Sign in to confirm your age. This video may be inappropriate":       "Video yaş sınırlı; YouTube oturum açılmadan indirilmesine izin vermiyor.",
 		"ERROR: [youtube] abc: Sign in to confirm you're not a bot":                                "YouTube şu an bu bilgisayardan indirmeye izin vermedi. Bir süre sonra yeniden deneyin.",

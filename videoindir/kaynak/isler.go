@@ -713,7 +713,7 @@ func hatayiCevir(ham string) (baslik, ayrinti string) {
 		return "Video yalnızca kanal üyelerine açık.", ""
 	case var_("premieres in", "live event will begin", "is_upcoming"):
 		return "Yayın henüz başlamamış.", ""
-	case var_("video unavailable", "this video is not available", "has been removed", "account associated with this video has been terminated", "does not exist"):
+	case var_("video unavailable", "video is unavailable", "this video is not available", "has been removed", "account associated with this video has been terminated", "does not exist"):
 		return "Video bulunamadı; kaldırılmış ya da erişime kapatılmış olabilir.", son
 	case var_("not available in your country", "geo restrict", "geo-restrict"):
 		return "Video bu ülkede izlenemiyor.", ""

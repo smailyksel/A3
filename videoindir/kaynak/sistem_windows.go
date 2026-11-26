@@ -15,9 +15,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unsafe"
 
 	ole "github.com/go-ole/go-ole"
-	"github.com/go-ole/go-ole/oleutil"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
@@ -212,6 +212,47 @@ func dosyaKopyala(kaynak, hedef string) error {
 	return nil
 }
 
+// Kısayol, Windows'un kabuk bağlantısı arayüzüyle (IShellLinkW ve
+// IPersistFile) yazılır. Bu arayüz adları Unicode olarak alır; kısayolun
+// adındaki "İ" ya da kullanıcı klasöründeki Türkçe harfler, Windows'un
+// dil ayarı ne olursa olsun bozulmaz.
+var (
+	sinifKabukBaglantisi  = ole.NewGUID("{00021401-0000-0000-C000-000000000046}")
+	arayuzKabukBaglantisi = ole.NewGUID("{000214F9-0000-0000-C000-000000000046}")
+	arayuzKaliciDosya     = ole.NewGUID("{0000010B-0000-0000-C000-000000000046}")
+)
+
+// Yöntemlerin arayüz tablosundaki sıraları.
+const (
+	baglantiAciklamaYaz = 7  // IShellLinkW::SetDescription
+	baglantiKlasorYaz   = 9  // IShellLinkW::SetWorkingDirectory
+	baglantiSimgeYaz    = 17 // IShellLinkW::SetIconLocation
+	baglantiHedefYaz    = 20 // IShellLinkW::SetPath
+	dosyaKaydet         = 6  // IPersistFile::Save
+)
+
+// comCagir, bir COM nesnesinin tablodaki sırası verilen yöntemini çağırır.
+func comCagir(nesne unsafe.Pointer, sira int, degerler ...uintptr) error {
+	tablo := *(**[32]uintptr)(nesne)
+	hepsi := append([]uintptr{uintptr(nesne)}, degerler...)
+	sonuc, _, _ := syscall.SyscallN(tablo[sira], hepsi...)
+	if int32(sonuc) < 0 {
+		return ole.NewError(sonuc)
+	}
+	return nil
+}
+
+// metinleCagir, tek bir metin (ve isteğe bağlı ek değerler) alan yöntemi çağırır.
+func metinleCagir(nesne unsafe.Pointer, sira int, metin string, ek ...uintptr) error {
+	p, err := windows.UTF16PtrFromString(metin)
+	if err != nil {
+		return err
+	}
+	err = comCagir(nesne, sira, append([]uintptr{uintptr(unsafe.Pointer(p))}, ek...)...)
+	runtime.KeepAlive(p)
+	return err
+}
+
 // kisayolKoy, masaüstüne "Video İndir" kısayolunu koyar.
 func kisayolKoy(hedef string) error {
 	masaustu, err := windows.KnownFolderPath(windows.FOLDERID_Desktop, 0)
@@ -222,9 +263,8 @@ func kisayolKoy(hedef string) error {
 
 	// Kısayolun simgesi programın yanına yazılan dosyadan gelir.
 	simge := filepath.Join(filepath.Dir(hedef), "simge.ico")
-	simgeYeri := hedef + ",0"
-	if err := os.WriteFile(simge, simgeDosyasi, 0o644); err == nil {
-		simgeYeri = simge + ",0"
+	if err := os.WriteFile(simge, simgeDosyasi, 0o644); err != nil {
+		simge = hedef
 	}
 
 	runtime.LockOSThread()
@@ -238,32 +278,30 @@ func kisayolKoy(hedef string) error {
 	}
 	defer ole.CoUninitialize()
 
-	nesne, err := oleutil.CreateObject("WScript.Shell")
+	nesne, err := ole.CreateInstance(sinifKabukBaglantisi, arayuzKabukBaglantisi)
 	if err != nil {
 		return err
 	}
 	defer nesne.Release()
-	kabuk, err := nesne.QueryInterface(ole.IID_IDispatch)
+	baglanti := unsafe.Pointer(nesne)
+
+	if err := metinleCagir(baglanti, baglantiHedefYaz, hedef); err != nil {
+		return err
+	}
+	if err := metinleCagir(baglanti, baglantiKlasorYaz, filepath.Dir(hedef)); err != nil {
+		return err
+	}
+	if err := metinleCagir(baglanti, baglantiAciklamaYaz, "YouTube videosu indir"); err != nil {
+		return err
+	}
+	if err := metinleCagir(baglanti, baglantiSimgeYaz, simge, 0); err != nil {
+		return err
+	}
+
+	dosya, err := nesne.QueryInterface(arayuzKaliciDosya)
 	if err != nil {
 		return err
 	}
-	defer kabuk.Release()
-	sonuc, err := oleutil.CallMethod(kabuk, "CreateShortcut", kisayol)
-	if err != nil {
-		return err
-	}
-	k := sonuc.ToIDispatch()
-	defer k.Release()
-	for ad, deger := range map[string]string{
-		"TargetPath":       hedef,
-		"WorkingDirectory": filepath.Dir(hedef),
-		"Description":      "YouTube videosu indir",
-		"IconLocation":     simgeYeri,
-	} {
-		if _, err := oleutil.PutProperty(k, ad, deger); err != nil {
-			return err
-		}
-	}
-	_, err = oleutil.CallMethod(k, "Save")
-	return err
+	defer dosya.Release()
+	return metinleCagir(unsafe.Pointer(dosya), dosyaKaydet, kisayol, 1)
 }

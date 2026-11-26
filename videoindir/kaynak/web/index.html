@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Video İndir</title>
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0d0e11">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="apple-mobile-web-app-title" content="Video İndir">
+<link rel="icon" type="image/png" sizes="32x32" href="simge-32.png">
+<link rel="apple-touch-icon" href="simge-180.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main class="kabuk" id="sayfa">
+  <header class="bas">
+    <h1>Video İndir</h1>
+    <p class="bagli" id="bagli" hidden><i></i><span id="bagliYazi">Bilgisayar açık, bağlı</span></p>
+  </header>
+
+  <p class="uyari-serit" id="kopuk" hidden></p>
+
+  <section class="kart" id="kurulum" hidden>
+    <div class="etiket">İlk kurulum</div>
+    <p class="kurulum-yazi" id="kurulumYazi">Gerekli parçalar indiriliyor.</p>
+    <div class="cubuk" id="kurulumCubuk"><i></i></div>
+    <p class="aciklama" id="kurulumAlt">Bu yalnızca bir kez yapılır; bağlantı hızına göre birkaç dakika sürebilir.</p>
+    <button class="dugme" id="kurulumYeniden" type="button" hidden>Yeniden dene</button>
+  </section>
+
+  <section>
+    <label class="etiket" for="baglanti">YouTube bağlantısı</label>
+    <div class="alan">
+      <input class="kutu" id="baglanti" type="url" inputmode="url" enterkeyhint="go" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…">
+      <button class="dugme" id="yapistir" type="button" hidden>Yapıştır</button>
+    </div>
+    <p class="ileti" id="ileti" hidden></p>
+  </section>
+
+  <section class="video" id="onizleme" hidden>
+    <div class="kapak" id="onKapak"><span id="onSaat"></span></div>
+    <div class="video-yazi">
+      <div class="ad" id="onAd"></div>
+      <div class="kanal" id="onKanal"></div>
+    </div>
+  </section>
+
+  <section class="secenekler">
+    <div>
+      <div class="etiket" id="turEtiket">Ne insin</div>
+      <div class="secim" role="radiogroup" aria-labelledby="turEtiket" id="turSecim">
+        <button class="hap" type="button" role="radio" data-deger="video">Video</button>
+        <button class="hap" type="button" role="radio" data-deger="ses">Yalnızca ses (MP3)</button>
+      </div>
+    </div>
+    <div id="kaliteGrubu">
+      <div class="etiket" id="kaliteEtiket">Kalite</div>
+      <div class="secim" role="radiogroup" aria-labelledby="kaliteEtiket" id="kaliteSecim">
+        <button class="hap" type="button" role="radio" data-deger="eniyi">En iyi</button>
+        <button class="hap" type="button" role="radio" data-deger="1080">1080p</button>
+        <button class="hap" type="button" role="radio" data-deger="720">720p</button>
+      </div>
+    </div>
+  </section>
+  <p class="aciklama" id="kaliteNotu" hidden>En iyi kalite 1080p'nin üstüne çıkarsa dosya büyür ve iPhone'da oynamayabilir.</p>
+
+  <button class="dugme dolu genis" id="indir" type="button" disabled>İndir</button>
+
+  <section id="surenBolum" hidden>
+    <div id="suren"></div>
+  </section>
+
+  <section id="hazirBolum" hidden></section>
+
+  <section id="gecmisBolum" hidden>
+    <div class="etiket">Son indirilenler</div>
+    <div class="liste" id="gecmis"></div>
+  </section>
+
+  <section class="kart ipucu" id="anaEkran" hidden>
+    <div>
+      <div class="kart-baslik">Ana ekrana ekleyin</div>
+      <p class="aciklama">Paylaş simgesine, ardından “Ana Ekrana Ekle”ye dokunun. Sayfa telefonda bir uygulama gibi durur.</p>
+    </div>
+    <button class="dugme" id="anaEkranTamam" type="button">Tamam</button>
+  </section>
+
+  <section class="panel" id="bilgisayarPaneli" hidden>
+    <div class="ayar">
+      <div class="ayar-yazi">
+        <div class="kart-baslik">Telefondan kullanım</div>
+        <p class="aciklama">Açıkken aynı Wi-Fi ağındaki iPhone'unuzdan bağlantı verip videoyu telefona alırsınız.</p>
+      </div>
+      <button class="anahtar" id="telefonAnahtari" type="button" role="switch" aria-checked="false" aria-label="Telefondan kullanım"><i></i></button>
+    </div>
+    <div class="telefon-kur" id="telefonKur" hidden>
+      <div class="karekod"><img id="karekod" alt="Telefonla okutulacak karekod" width="168" height="168"></div>
+      <div>
+        <ol class="adimlar">
+          <li>iPhone kamerasını karekoda tutun, çıkan bağlantıya dokunun.</li>
+          <li>Açılan sayfada Paylaş simgesine, ardından “Ana Ekrana Ekle”ye dokunun.</li>
+        </ol>
+        <p class="aciklama">Windows izin sorarsa “İzin ver” deyin. Telefon ile bilgisayar aynı Wi-Fi ağında olmalıdır.</p>
+      </div>
+    </div>
+    <p class="aciklama uyari-yazi" id="agYok" hidden>Bilgisayar bir ağa bağlı görünmüyor; telefon bağlanamaz.</p>
+
+    <div class="ayar" id="otomatikSatiri" hidden>
+      <div class="ayar-yazi">
+        <div class="kart-baslik">Windows açılınca çalışsın</div>
+        <p class="aciklama">Program pencere açmadan başlar; telefon bilgisayar açık olduğu sürece bağlanır.</p>
+      </div>
+      <button class="anahtar" id="otomatikAnahtari" type="button" role="switch" aria-checked="false" aria-label="Windows açılınca çalışsın"><i></i></button>
+    </div>
+
+    <div class="ayar">
+      <div class="ayar-yazi">
+        <div class="kart-baslik">Programı kapat</div>
+        <p class="aciklama">Pencereyi kapatmak programı durdurmaz; arka planda çalışır. Tümüyle kapatmak için bunu kullanın.</p>
+      </div>
+      <button class="dugme" id="kapat" type="button">Kapat</button>
+    </div>
+  </section>
+</main>
+
+<footer class="alt-serit" id="altSerit" hidden>
+  <span>Kayıt yeri: <b id="klasor"></b></span>
+  <button class="bag" id="klasorAc" type="button">Klasörü aç</button>
+</footer>
+
+<div class="kapandi" id="kapandi" hidden>
+  <h1>Program kapatıldı</h1>
+  <p>Bu pencereyi kapatabilirsiniz. Yeniden açmak için masaüstündeki Video İndir simgesini kullanın.</p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

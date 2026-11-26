@@ -247,6 +247,26 @@ input[type="search"]::-webkit-search-cancel-button { filter: invert(0.75); }
 .not-durum { display: flex; align-items: center; gap: 12px; min-width: 0; margin-top: 10px; font-size: 0.8125rem; color: var(--soluk); overflow-wrap: anywhere; }
 .not-durum.uyari { color: var(--uyari); }
 
+/* Kayıt sola kaydırılınca kartın sağ yanı açılır ve arkasındaki Sil düğmesi görünür;
+   kart yerinden oynamadığı için kaydın yazısı okunur kalır. */
+.kaydir { position: relative; border-radius: var(--r); overflow: hidden; }
+.kaydir .not {
+  position: relative; z-index: 1;
+  touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-clip-path: inset(0 0 0 0 round 8px); clip-path: inset(0 0 0 0 round 8px);
+  transition: clip-path 0.2s ease, -webkit-clip-path 0.2s ease;
+}
+.kaydir.surukleniyor .not { transition: none; }
+.kaydir.acik .not { -webkit-clip-path: inset(0 84px 0 0 round 8px); clip-path: inset(0 84px 0 0 round 8px); }
+.kaydir-sil {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 132px; padding-left: 48px;
+  display: grid; place-content: center; justify-items: center; gap: 3px;
+  background: #b83a2e; color: #fff; font-size: 0.8125rem; font-weight: 600;
+  visibility: hidden; transition: visibility 0s 0.2s;
+}
+.kaydir-sil .ikon { width: 22px; height: 22px; }
+.kaydir.acik .kaydir-sil, .kaydir.surukleniyor .kaydir-sil { visibility: visible; transition-delay: 0s; }
+
 .bos {
   margin-top: 8px; padding: 30px 20px 26px; text-align: center; color: var(--soluk); font-size: 0.9375rem;
   border: 1px dashed var(--cizgi); border-radius: var(--r);

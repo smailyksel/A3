@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seslendir</title>
+<meta name="description" content="Yazılan ya da yapıştırılan metni Türkçe kadın sesiyle okur.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0e11">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Seslendir">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg class="gizli-svg" aria-hidden="true" focusable="false">
+  <symbol id="i-oynat" viewBox="0 0 24 24"><path d="M8 5.3v13.4a.7.7 0 0 0 1.07.6l10.4-6.7a.7.7 0 0 0 0-1.2L9.07 4.7A.7.7 0 0 0 8 5.3z"/></symbol>
+  <symbol id="i-dur" viewBox="0 0 24 24"><rect x="6.2" y="5" width="4.2" height="14" rx="1.3"/><rect x="13.6" y="5" width="4.2" height="14" rx="1.3"/></symbol>
+  <symbol id="i-geri" viewBox="0 0 24 24"><path d="M6 5.5v13"/><path d="M19 6 10 12l9 6z"/></symbol>
+  <symbol id="i-ileri" viewBox="0 0 24 24"><path d="M18 5.5v13"/><path d="M5 6l9 6-9 6z"/></symbol>
+  <symbol id="i-bastan" viewBox="0 0 24 24"><path d="M4.6 12.4a7.4 7.4 0 1 0 2.3-5.7"/><path d="M4.4 4.4v4.3h4.3"/></symbol>
+  <symbol id="i-ayar" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="i-yapistir" viewBox="0 0 24 24"><path d="M9 5H6.5v15.5h11V5H15"/><rect x="9" y="3.5" width="6" height="3.2" rx="1"/><path d="M9.5 11.5h5M9.5 15h3.5"/></symbol>
+  <symbol id="i-sil" viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V4.5h5V7M7 7l.8 12.5h8.4L17 7"/></symbol>
+  <symbol id="i-kalem" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5l3 3L8 19z"/></symbol>
+  <symbol id="i-ses" viewBox="0 0 24 24"><path d="M4 9.5v5h3.4l4.6 4v-13l-4.6 4z"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/></symbol>
+  <symbol id="i-kapat" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="m9 5.5 6.5 6.5L9 18.5"/></symbol>
+</svg>
+
+<div class="uyg" id="uyg" data-gorunum="duzen" data-durum="durdu">
+  <header class="ust">
+    <div class="ust-yazi">
+      <p class="ust-etiket">Metni sese çevirir</p>
+      <h1>Seslendir</h1>
+    </div>
+    <div class="ust-islem">
+      <span class="dalga" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <button type="button" class="simge-dugme" id="ayarAc" aria-label="Ses ayarları"><svg class="ikon" aria-hidden="true"><use href="#i-ayar"/></svg></button>
+    </div>
+  </header>
+
+  <main class="icerik" id="icerik">
+    <div class="araclar">
+      <div class="arac-duzen">
+        <button type="button" class="dugme dugme-kucuk" id="yapistir"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-yapistir"/></svg><span>Yapıştır</span></button>
+        <button type="button" class="dugme dugme-kucuk dugme-sade" id="temizle" hidden><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-sil"/></svg><span>Temizle</span></button>
+      </div>
+      <div class="arac-dinle">
+        <button type="button" class="dugme dugme-kucuk" id="duzenle"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-kalem"/></svg><span>Metni düzenle</span></button>
+      </div>
+      <p class="ozet" id="ozet"></p>
+    </div>
+
+    <div class="kagit">
+      <label class="gizli" for="metin">Okunacak metin</label>
+      <textarea id="metin" spellcheck="false" autocapitalize="sentences" placeholder="Metni buraya yazın ya da yapıştırın."></textarea>
+      <div class="bos-yardim" id="bosYardim">
+        <button type="button" class="metin-dugme" id="ornek">Örnek metinle deneyin</button>
+      </div>
+      <div class="okuma" id="okuma" tabindex="0" aria-label="Okunan metin. Bir cümleye dokunarak okumayı oradan başlatabilirsiniz."></div>
+    </div>
+    <noscript><p class="uyari-kutu">Bu uygulamanın çalışması için tarayıcıda JavaScript açık olmalıdır.</p></noscript>
+  </main>
+
+  <footer class="kumanda" aria-label="Okuma düğmeleri">
+    <div class="ilerleme">
+      <label class="gizli" for="yer">Okuma yeri</label>
+      <input type="range" id="yer" min="1" max="1" value="1" step="1" disabled>
+      <div class="ilerleme-yazi">
+        <span id="yerYazi"></span>
+        <span id="kalan"></span>
+      </div>
+    </div>
+
+    <div class="tuslar">
+      <button type="button" class="yan-tus" id="hiz"><b id="hizYazi">1×</b><span>Hız</span></button>
+      <button type="button" class="yuvarlak" id="geri" aria-label="Önceki cümle"><svg class="ikon" aria-hidden="true"><use href="#i-geri"/></svg></button>
+      <button type="button" class="oynat" id="oynat" aria-label="Oku">
+        <svg class="i-oynat" aria-hidden="true"><use href="#i-oynat"/></svg>
+        <svg class="i-dur" aria-hidden="true"><use href="#i-dur"/></svg>
+      </button>
+      <button type="button" class="yuvarlak" id="ileri" aria-label="Sonraki cümle"><svg class="ikon" aria-hidden="true"><use href="#i-ileri"/></svg></button>
+      <button type="button" class="yan-tus" id="bastan"><svg class="ikon" aria-hidden="true"><use href="#i-bastan"/></svg><span>Baştan</span></button>
+    </div>
+
+    <button type="button" class="ses-satiri" id="sesSatiri">
+      <svg class="ikon ikon-k" aria-hidden="true"><use href="#i-ses"/></svg>
+      <span id="sesYazi">Ses hazırlanıyor</span>
+      <svg class="ikon ikon-k ses-ok" aria-hidden="true"><use href="#i-ok"/></svg>
+    </button>
+  </footer>
+</div>
+
+<dialog class="pencere" id="pencere" aria-labelledby="pencereBaslik">
+  <div class="pencere-bas">
+    <h2 id="pencereBaslik">Ses Ayarları</h2>
+    <button type="button" class="simge-dugme" id="pencereKapat" aria-label="Kapat"><svg class="ikon" aria-hidden="true"><use href="#i-kapat"/></svg></button>
+  </div>
+  <div class="pencere-govde">
+    <section class="bolum">
+      <h3 class="bas">Okuyan ses</h3>
+      <div id="sesListesi" role="radiogroup" aria-label="Okuyan ses"></div>
+      <p class="uyari-kutu" id="sesUyari" hidden></p>
+      <p class="kucuk" id="sesNot"></p>
+    </section>
+
+    <section class="bolum">
+      <h3 class="bas">Okuma</h3>
+      <label class="anahtar">
+        <span class="anahtar-yazi"><b>Kısaltmaları açarak oku</b><small>Av., T.C., md., vb. gibi kısaltmalar açık haliyle okunur.</small></span>
+        <input type="checkbox" id="kisaltma">
+        <span class="anahtar-kol" aria-hidden="true"></span>
+      </label>
+    </section>
+
+    <section class="bolum" id="kurulum" hidden>
+      <h3 class="bas">Uygulama olarak ekleme</h3>
+      <p class="kucuk" id="kurulumYazi"></p>
+    </section>
+  </div>
+</dialog>
+
+<div class="bildirim" id="bildirim" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

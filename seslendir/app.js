@@ -39,11 +39,13 @@
   /* ---------- Depo ---------- */
 
   const depo = {
+    hata: false,   // tarayıcı kayıt tutmaya izin vermiyorsa (özel sekme, çerezler kapalı) true olur
     al(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    yaz(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* depo kapalıysa kayıt tutulmaz */ } },
+    yaz(k, v) { try { localStorage.setItem(k, v); this.hata = localStorage.getItem(k) !== v; } catch (e) { this.hata = true; } },
     sil(k) { try { localStorage.removeItem(k); } catch (e) { /* aynı */ } },
     nesne(k) { try { return JSON.parse(this.al(k) || 'null') || {}; } catch (e) { return {}; } },
   };
+  const DEPO_UYARISI = 'Tarayıcı bu sayfanın kayıt tutmasına izin vermiyor; metin, ayarlar ve Azure anahtarı kapatınca silinir. Özel sekme kullanmayın; iPhone’da Ayarlar › Safari › “Tüm Çerezleri Engelle” kapalı olmalı.';
 
   const ayar = Object.assign({ ses: '', hiz: 1, kisaltma: true, azure: null }, depo.nesne('seslendir.ayar'));
   if (HIZLAR.indexOf(ayar.hiz) < 0) ayar.hiz = 1;
@@ -947,7 +949,9 @@
         sesListesiniYaz();
         azureFormuDoldur();
         const deneme = bulutMu();
-        azureDurumYaz('Bağlandı. Sesler: ' + yeni.map(v => v.name).join(', ') + '.' + (deneme ? ' Deneme cümlesi okunuyor.' : ''), 'ok');
+        const kaydedildi = (depo.nesne('seslendir.ayar').azure || {}).anahtar === anahtar;
+        if (!kaydedildi) azureDurumYaz('Bağlandı ama anahtar kaydedilemedi. ' + DEPO_UYARISI, 'hata');
+        else azureDurumYaz('Bağlandı. Sesler: ' + yeni.map(v => v.name).join(', ') + '.' + (deneme ? ' Deneme cümlesi okunuyor.' : ''), 'ok');
         if (deneme) bulutDeneme();
       })
       .catch(e => azureDurumYaz(azureHataMesaji(e), 'hata'))
@@ -1064,7 +1068,7 @@
       el.bildirim.appendChild(d);
     }
     el.bildirim.hidden = false;
-    bildirimSuresi = setTimeout(() => { el.bildirim.hidden = true; }, eylem ? 7000 : 3800);
+    bildirimSuresi = setTimeout(() => { el.bildirim.hidden = true; }, eylem ? 7000 : (yazi.length > 90 ? 9000 : 3800));
   }
 
   // Okuma sürerken telefon ekranı kapanmasın; ekran kapanınca ses de durur.
@@ -1307,7 +1311,7 @@
     const c = cihaz();
     let yazi = '';
     if (!kurulu()) {
-      if (c.ios) yazi = 'Safari’de Paylaş düğmesine, ardından “Ana Ekrana Ekle”ye dokunun. Uygulama ana ekranda kendi simgesiyle açılır.';
+      if (c.ios) yazi = 'Safari’de Paylaş düğmesine, ardından “Ana Ekrana Ekle”ye dokunun. Uygulama ana ekranda kendi simgesiyle açılır. Ana ekrandaki uygulama ile Safari ayrı kayıt tutar; metin, ayarlar ve Azure anahtarı hangisinde girildiyse orada kalır.';
       else if (c.android) yazi = 'Tarayıcı menüsünden “Ana ekrana ekle” ya da “Uygulamayı yükle” seçeneğine dokunun.';
       else if (c.edge) yazi = 'Edge menüsünde Uygulamalar bölümünden “Bu siteyi uygulama olarak yükle”yi seçin. Uygulama başlat menüsüne ve görev çubuğuna eklenebilir.';
       else if (c.windows) yazi = 'Türkçe kadın sesi için sayfayı Microsoft Edge’de açın; Edge menüsünde Uygulamalar bölümünden “Bu siteyi uygulama olarak yükle”yi seçin.';
@@ -1419,6 +1423,9 @@
   });
 
   /* ---------- Açılış ---------- */
+
+  depo.yaz('seslendir.deneme', '1');
+  if (depo.hata) setTimeout(() => bildir(DEPO_UYARISI), 800); else depo.sil('seslendir.deneme');
 
   const kayitliMetin = depo.al('seslendir.metin');
   if (kayitliMetin) {

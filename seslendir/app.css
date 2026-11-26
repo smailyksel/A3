@@ -426,6 +426,33 @@ input[type="range"]:disabled::-moz-range-thumb { visibility: hidden; }
 .anahtar input:checked ~ .anahtar-kol::after { transform: translateX(18px); background: var(--vurgu-yazi); }
 .anahtar:has(input:focus-visible) { outline: 2px solid var(--vurgu); outline-offset: 2px; }
 
+/* ---------- Azure formu ---------- */
+
+.ses-grup {
+  margin: 14px 0 6px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--silik);
+}
+.ses-grup:first-child { margin-top: 0; }
+
+.alan { display: grid; gap: 5px; margin-top: 12px; }
+.alan label { font-size: 0.8125rem; font-weight: 500; color: var(--soluk); }
+.alan input {
+  width: 100%; min-height: 44px; padding: 8px 12px;
+  background: var(--zemin2); color: var(--yazi);
+  border: 1px solid var(--cizgi); border-radius: var(--r-k);
+  font-size: 1rem; line-height: 1.4;
+  -webkit-appearance: none; appearance: none;
+}
+.alan input::placeholder { color: var(--silik); opacity: 1; }
+.alan input:focus { outline: none; border-color: var(--vurgu); box-shadow: 0 0 0 1px var(--vurgu); }
+.alan-satir { display: flex; gap: 6px; align-items: center; }
+.alan-satir input { flex: 1; min-width: 0; }
+.gizli-anahtar:not(.acik) { -webkit-text-security: disc; }
+.alan-dugmeler { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.durum { margin-top: 10px; }
+.durum[data-tur="ok"] { color: var(--vurgu-acik); }
+.durum[data-tur="hata"] { color: var(--uyari); }
+
 /* ---------- Bildirim ---------- */
 
 .bildirim {

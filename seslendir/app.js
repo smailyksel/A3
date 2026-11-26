@@ -1,10 +1,12 @@
 /* Seslendir: yazılan ya da yapıştırılan metni Türkçe kadın sesiyle okur.
 
-   Ses, cihazın ya da tarayıcının kendi seslendirme motorundan gelir
-   (iPhone'da Yelda, Windows'ta Microsoft Edge'in Emel sesi). Metin cümlelere
-   bölünür ve sırayla okutulur; böylece okunan cümle işaretlenir, okuma
-   duraklatılıp aynı cümleden sürdürülür ve uzun metinlerde ses yarıda kesilmez.
-   Metin ve ayarlar yalnızca bu cihazda, tarayıcı deposunda tutulur. */
+   Ses iki yerden gelebilir: cihazın kendi seslendirme motorundan (iPhone'da
+   Yelda) ya da kullanıcının kendi Azure Konuşma anahtarıyla Microsoft'un
+   Emel ve Ahmet seslerinden. Metin cümlelere bölünür ve sırayla okutulur;
+   böylece okunan cümle işaretlenir, okuma duraklatılıp aynı yerden sürdürülür.
+   Azure sesinde cümleler 600 harflik paketler halinde istenir, gelen ses
+   dosyası çalınırken bir sonraki paket önceden alınır. Metin, ayarlar ve
+   Azure anahtarı yalnızca bu cihazda, tarayıcı deposunda tutulur. */
 
 (function () {
   'use strict';
@@ -21,6 +23,8 @@
     ayarAc: $('ayarAc'), pencere: $('pencere'), pencereKapat: $('pencereKapat'),
     sesListesi: $('sesListesi'), sesUyari: $('sesUyari'), sesNot: $('sesNot'), sesIpucu: $('sesIpucu'),
     kisaltma: $('kisaltma'), kurulum: $('kurulum'), kurulumYazi: $('kurulumYazi'),
+    azureAnahtar: $('azureAnahtar'), azureBolge: $('azureBolge'), azureGoster: $('azureGoster'),
+    azureKaydet: $('azureKaydet'), azureKaldir: $('azureKaldir'), azureDurum: $('azureDurum'),
     bildirim: $('bildirim'),
   };
 
@@ -40,8 +44,9 @@
     nesne(k) { try { return JSON.parse(this.al(k) || 'null') || {}; } catch (e) { return {}; } },
   };
 
-  const ayar = Object.assign({ ses: '', hiz: 1, kisaltma: true }, depo.nesne('seslendir.ayar'));
+  const ayar = Object.assign({ ses: '', hiz: 1, kisaltma: true, azure: null }, depo.nesne('seslendir.ayar'));
   if (HIZLAR.indexOf(ayar.hiz) < 0) ayar.hiz = 1;
+  if (!ayar.azure || typeof ayar.azure !== 'object' || !ayar.azure.anahtar || !ayar.azure.bolge) ayar.azure = null;
   const ayarKaydet = () => depo.yaz('seslendir.ayar', JSON.stringify(ayar));
 
   /* ---------- Durum ---------- */
@@ -207,6 +212,7 @@
   let secili = null;
 
   const cins = v => {
+    if (v.bulut) return v.cinsiyet === 'Female' ? 'kadin' : v.cinsiyet === 'Male' ? 'erkek' : 'belirsiz';
     const ad = (v.name || '').toLowerCase();
     if (/emel|yelda|seda|filiz|kadın|kadin|female/.test(ad)) return 'kadin';
     if (/tolga|ahmet|cem|erkek|male/.test(ad)) return 'erkek';
@@ -216,6 +222,7 @@
   // Aynı adlı sesin temel ve gelişmiş sürümleri ancak kimliğinden ayırt edilir
   // (iPhone'da ikisinin de adı "Yelda"dır).
   const kalite = v => {
+    if (v.bulut) return 'gelismis';
     const k = ((v.voiceURI || '') + ' ' + (v.name || '')).toLowerCase();
     if (/premium/.test(k)) return 'premium';
     if (/enhanced|natural|neural|geliştirilmiş|doğal/.test(k)) return 'gelismis';
@@ -226,6 +233,7 @@
     const c = cins(v);
     const k = kalite(v);
     let p = c === 'kadin' ? 100 : c === 'erkek' ? -100 : 0;
+    if (v.bulut) p += 1000;
     if (k === 'premium') p += 40;
     else if (k === 'gelismis') p += 30;
     if (/compact/.test((v.voiceURI || '').toLowerCase())) p -= 5;
@@ -234,6 +242,7 @@
   }
 
   function sesAdi(v) {
+    if (v.bulut) return v.name;
     let ad = (v.name || '').replace(/\s*-\s*Turkish.*$/i, '').replace(/^Microsoft\s+/i, '')
       .replace(/\bOnline\b/i, '').replace(/\(Natural\)/i, '(doğal)').replace(/\(Enhanced\)/i, '(gelişmiş)')
       .replace(/\(Premium\)/i, '(üst kalite)').replace(/\s+/g, ' ').trim();
@@ -246,12 +255,11 @@
     return ad;
   }
 
-  const sesYeri = v => (v.localService === false ? 'internet üzerinden' : 'bu cihazda');
+  const sesYeri = v => (v.bulut ? 'Azure, internet üzerinden' : v.localService === false ? 'internet üzerinden' : 'bu cihazda');
 
   function sesleriYukle() {
-    if (!synth) return;
     let hepsi = [];
-    try { hepsi = synth.getVoices() || []; } catch (e) { hepsi = []; }
+    if (synth) { try { hepsi = synth.getVoices() || []; } catch (e) { hepsi = []; } }
     const gorulen = new Set();
     const tr = hepsi.filter(v => {
       if (!/^tr(?:[-_]|$)/i.test(v.lang || '')) return false;
@@ -261,7 +269,7 @@
       return true;
     });
     if (hepsi.length) S.seslerGeldi = true;
-    sesler = tr.sort((a, b) => sesPuani(b) - sesPuani(a));
+    sesler = azureSesleri().concat(tr).sort((a, b) => sesPuani(b) - sesPuani(a));
     secili = sesler.find(v => v.voiceURI === ayar.ses) || sesler[0] || null;
     sesSatiriniYaz();
     if (el.pencere.open) sesListesiniYaz();
@@ -291,10 +299,12 @@
 
   function sesSatiriniYaz() {
     let yazi, uyari = false;
-    if (!synth) { yazi = 'Bu tarayıcı sesli okumayı desteklemiyor'; uyari = true; }
+    if (!synth && !azureHazir()) { yazi = 'Bu tarayıcı sesli okumayı desteklemiyor'; uyari = true; }
     else if (!secili) {
-      if (S.seslerGeldi) { yazi = 'Türkçe ses bulunamadı'; uyari = true; }
+      if (S.seslerGeldi || !synth) { yazi = 'Türkçe ses bulunamadı'; uyari = true; }
       else yazi = 'Ses hazırlanıyor';
+    } else if (secili.bulut) {
+      yazi = 'Ses: ' + sesAdi(secili) + ' · Azure';
     } else if (cins(secili) === 'erkek' && !sesler.some(v => cins(v) !== 'erkek')) {
       yazi = 'Türkçe kadın sesi bulunamadı · ' + sesAdi(secili) + ' okuyor';
       uyari = true;
@@ -305,7 +315,16 @@
 
   function sesListesiniYaz() {
     el.sesListesi.textContent = '';
+    let sonGrup = null;
     sesler.forEach((v, n) => {
+      const grup = v.bulut ? 'İnternet sesi (Azure)' : 'Bu cihaz';
+      if (sesler.some(x => x.bulut) && grup !== sonGrup) {
+        const b = document.createElement('p');
+        b.className = 'ses-grup';
+        b.textContent = grup;
+        el.sesListesi.appendChild(b);
+        sonGrup = grup;
+      }
       const satir = document.createElement('label');
       satir.className = 'ses-sec';
       const giris = document.createElement('input');
@@ -326,7 +345,7 @@
 
     const kadinYok = !sesler.some(v => cins(v) !== 'erkek');
     let uyari = '';
-    if (!synth) uyari = 'Bu tarayıcı sesli okumayı desteklemiyor. ' + sesOnerisi();
+    if (!synth && !azureHazir()) uyari = 'Bu tarayıcı sesli okumayı desteklemiyor. ' + sesOnerisi();
     else if (!sesler.length) uyari = S.seslerGeldi ? 'Bu cihazda Türkçe ses bulunamadı. ' + sesOnerisi() : 'Sesler henüz yüklenmedi. Birkaç saniye sonra yeniden deneyin.';
     else if (kadinYok) uyari = 'Bu tarayıcıda Türkçe kadın sesi yok. ' + sesOnerisi();
     el.sesUyari.textContent = uyari;
@@ -353,7 +372,9 @@
   let sonHaber = 0;     // ses motorundan gelen son başlama, sözcük ya da bitiş haberi
 
   function konus(i) {
-    if (!synth || !S.parcalar.length) return;
+    if (!S.parcalar.length) return;
+    if (bulutMu()) { bulutKonus(i); return; }
+    if (!synth) return;
     clearTimeout(bekleme);
     const benim = ++oturum;
     S.i = Math.max(0, Math.min(i, S.parcalar.length - 1));
@@ -405,6 +426,10 @@
 
   function sonraki() {
     if (S.i + 1 < S.parcalar.length) { konus(S.i + 1); return; }
+    bitir();
+  }
+
+  function bitir() {
     sustur();
     S.i = 0;
     depo.sil('seslendir.yer');
@@ -419,9 +444,11 @@
     baslangic = 0;
     aktif = null;
     if (synth) { try { synth.cancel(); } catch (e) { /* ses motoru yanıt vermiyorsa yapılacak bir şey yok */ } }
+    bulutDurdur();
   }
 
   function duraklat() {
+    if (bulutMu()) bulutKaldigiYer();
     sustur();
     ciz();
   }
@@ -440,7 +467,7 @@
   // Ses motoru bitiş haberini vermeden susarsa (telefon kilitlenince ya da
   // tarayıcı konuşmayı düşürünce) okuma takılı kalmasın.
   function nobet() {
-    if (!S.okuyor || !baslangic || !synth) return;
+    if (!S.okuyor || !baslangic || !synth || bulutMu()) return;
     if (synth.speaking || synth.pending) return;
     const sn = (performance.now() - baslangic) / 1000;
     if (sn < 1.5) return;
@@ -454,7 +481,7 @@
   }
 
   function oynatDuraklat() {
-    if (!synth) { bildir('Bu tarayıcı sesli okumayı desteklemiyor.'); return; }
+    if (!synth && !azureHazir()) { bildir('Bu tarayıcı sesli okumayı desteklemiyor.'); return; }
     if (S.okuyor) { duraklat(); return; }
     if (!hazirla()) {
       bildir('Önce okunacak metni yazın ya da yapıştırın.');
@@ -479,6 +506,7 @@
   }
 
   function denemeOku() {
+    if (bulutMu()) { bulutDeneme(); return; }
     if (!synth) return;
     const mesgul = S.okuyor || synth.speaking || synth.pending;
     const okuyordu = S.okuyor;
@@ -497,6 +525,418 @@
     };
     // iPhone ilk konuşmayı ancak dokunuşla aynı anda başlatır.
     if (mesgul) setTimeout(soyle, 120); else soyle();
+  }
+
+  /* ---------- İnternet sesi (Azure) ---------- */
+
+  // Cümle parçaları 600 harflik paketlere toplanıp Azure'dan ses dosyası
+  // olarak istenir. Bir paket çalarken bir sonraki önceden alınır. Paket
+  // içinde hangi cümlenin okunduğu, harf sayısına göre tahmin edilir.
+  const BULUT_SINIR = 600;
+  const BULUT_ONBELLEK = 40;
+  const AZURE_VARSAYILAN = [
+    { ad: 'tr-TR-EmelNeural', kisa: 'Emel', cinsiyet: 'Female' },
+    { ad: 'tr-TR-AhmetNeural', kisa: 'Ahmet', cinsiyet: 'Male' },
+  ];
+
+  const B = {
+    parcalar: [],          // { bas, son, soz, basla: [], toplam }
+    hangi: [],             // cümle parçası -> paket
+    kaynak: null,          // paketlerin üretildiği metin
+    onbellek: new Map(),   // ses|söz -> { url }
+    bekleyen: new Map(),   // ses|söz -> Promise
+    audio: null,
+    sessiz: '',
+    calan: -1,             // çalan paket
+    bekliyor: false,       // paket indiriliyor
+    kaldi: null,           // duraklatılan yer: { i, n, t }
+    deneme: false,
+    degisti: 0,            // son kaynak değişiminin zamanı
+  };
+
+  const azureHazir = () => !!(ayar.azure && ayar.azure.anahtar && ayar.azure.bolge);
+  const bulutMu = () => !!(secili && secili.bulut && azureHazir());
+
+  function azureSesleri() {
+    if (!azureHazir()) return [];
+    const liste = (ayar.azure.sesler && ayar.azure.sesler.length) ? ayar.azure.sesler : AZURE_VARSAYILAN;
+    return liste.map(v => ({ bulut: true, name: v.kisa, azureAd: v.ad, cinsiyet: v.cinsiyet, voiceURI: 'azure:' + v.ad, lang: 'tr-TR', localService: false }));
+  }
+
+  const azureUrl = yol => 'https://' + ayar.azure.bolge + '.tts.speech.microsoft.com/cognitiveservices/' + yol;
+  const xmlKac = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+
+  function azureHataMesaji(e) {
+    const m = /http (\d+)/.exec(e && e.message || '');
+    const kod = m ? Number(m[1]) : 0;
+    if (kod === 401) return 'Anahtar kabul edilmedi. Portaldan ANAHTAR 1’i yeniden kopyalayın.';
+    if (kod === 403) return 'Erişim reddedildi: anahtar bu bölgeye ait olmayabilir ya da aylık ücretsiz kota dolmuş olabilir.';
+    if (kod === 429) return 'Azure çok sık istek aldı; birkaç saniye bekleyip yeniden deneyin.';
+    if (kod === 400) return 'Azure isteği kabul etmedi (400).';
+    if (kod) return 'Azure hata verdi (' + kod + ').';
+    return 'Azure’a bağlanılamadı. İnternet bağlantısını ve bölge adını kontrol edin.';
+  }
+
+  function bulutAudio() {
+    if (B.audio) return B.audio;
+    const a = new Audio();
+    a.preload = 'auto';
+    a.setAttribute('playsinline', '');
+    B.sessiz = sessizlikUret();
+    a.addEventListener('timeupdate', bulutIlerledi);
+    a.addEventListener('loadedmetadata', () => {
+      if (B.calan < 0 || a.src === B.sessiz || !a.duration || !isFinite(a.duration)) return;
+      const p = B.parcalar[B.calan];
+      if (!p || p.toplam < 40) return;
+      const olcum = p.toplam / a.duration;
+      if (olcum > 6 && olcum < 30) S.cps = S.cps * 0.5 + olcum * 0.5;
+    });
+    a.addEventListener('ended', () => {
+      if (B.deneme) { B.deneme = false; return; }
+      if (!S.okuyor || a.src === B.sessiz || B.calan < 0) return;
+      const n = B.calan;
+      if (n + 1 < B.parcalar.length) { S.i = B.parcalar[n + 1].bas; bulutKonus(S.i); }
+      else bitir();
+    });
+    a.addEventListener('error', () => {
+      if (!S.okuyor || a.src === B.sessiz) return;
+      bulutHata(new Error('ses dosyası çalınamadı'));
+    });
+    B.audio = a;
+    return a;
+  }
+
+  // Yarım saniyelik sessiz ses: iPhone'da ilk dokunuşta çalınır ki ses
+  // dosyası sonradan geldiğinde izin istemeden başlasın; paket beklenirken de
+  // çalma durumu korunur.
+  function sessizlikUret() {
+    const hz = 8000, n = hz / 2;
+    const buf = new ArrayBuffer(44 + n);
+    const v = new DataView(buf);
+    const yaz = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    yaz(0, 'RIFF'); v.setUint32(4, 36 + n, true); yaz(8, 'WAVE'); yaz(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, hz, true); v.setUint32(28, hz, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+    yaz(36, 'data'); v.setUint32(40, n, true);
+    for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);
+    try { return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' })); } catch (e) { return ''; }
+  }
+
+  function bulutSessizCal() {
+    const a = bulutAudio();
+    if (!B.sessiz) return;
+    if (a.src === B.sessiz && !a.paused) return;
+    B.calan = -1;
+    B.degisti = performance.now();
+    a.loop = true;
+    a.src = B.sessiz;
+    a.playbackRate = 1;
+    a.play().catch(() => {});
+  }
+
+  function bulutParcalariKur() {
+    if (B.kaynak === S.kaynak) return;
+    B.parcalar = [];
+    B.hangi = [];
+    let p = null;
+    S.parcalar.forEach((x, i) => {
+      const yeniPar = p && x.par !== S.parcalar[p.son].par;
+      if (!p || p.toplam + 1 + x.soz.length > BULUT_SINIR || (yeniPar && p.toplam >= BULUT_SINIR / 2)) {
+        p = { bas: i, son: i, soz: x.soz, basla: [0], toplam: x.soz.length };
+        B.parcalar.push(p);
+      } else {
+        p.son = i;
+        p.basla.push(p.toplam + 1);
+        p.soz += ' ' + x.soz;
+        p.toplam += 1 + x.soz.length;
+      }
+      B.hangi.push(B.parcalar.length - 1);
+    });
+    B.kaynak = S.kaynak;
+    B.calan = -1;
+    B.kaldi = null;
+  }
+
+  const bulutAnahtar = soz => (secili ? secili.azureAd : '') + '|' + soz;
+
+  function bulutIstek(soz, deneme) {
+    const k = bulutAnahtar(soz);
+    const hazir = B.onbellek.get(k);
+    if (hazir) return Promise.resolve(hazir);
+    if (B.bekleyen.has(k)) return B.bekleyen.get(k);
+    const ssml = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="tr-TR">' +
+      '<voice name="' + xmlKac(secili.azureAd) + '">' + xmlKac(soz) + '</voice></speak>';
+    const gonder = () => fetch(azureUrl('v1'), {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': ayar.azure.anahtar,
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+      },
+      body: ssml,
+    });
+    const soz2 = gonder()
+      .then(y => {
+        if (y.status === 429 && !deneme) return new Promise(c => setTimeout(c, 2500)).then(gonder);
+        return y;
+      })
+      .then(y => { if (!y.ok) throw new Error('http ' + y.status); return y.blob(); })
+      .then(blob => {
+        const kayit = { url: URL.createObjectURL(blob) };
+        B.onbellek.set(k, kayit);
+        while (B.onbellek.size > BULUT_ONBELLEK) {
+          const eski = B.onbellek.keys().next().value;
+          const e = B.onbellek.get(eski);
+          B.onbellek.delete(eski);
+          if (e && B.audio && B.audio.src !== e.url) { try { URL.revokeObjectURL(e.url); } catch (err) { /* önemsiz */ } }
+        }
+        return kayit;
+      })
+      .finally(() => { B.bekleyen.delete(k); });
+    B.bekleyen.set(k, soz2);
+    return soz2;
+  }
+
+  function bulutOnbellekTemizle() {
+    B.onbellek.forEach(e => { try { URL.revokeObjectURL(e.url); } catch (err) { /* önemsiz */ } });
+    B.onbellek.clear();
+    B.kaynak = null;
+  }
+
+  function bulutOnYukle(n) {
+    if (n < 0 || n >= B.parcalar.length) return;
+    bulutIstek(B.parcalar[n].soz).catch(() => {});
+  }
+
+  function bulutKonus(i) {
+    bulutParcalariKur();
+    const benim = ++oturum;
+    S.i = Math.max(0, Math.min(i, S.parcalar.length - 1));
+    S.okuyor = true;
+    B.deneme = false;
+    const n = B.hangi[S.i];
+    const p = B.parcalar[n];
+    const a = bulutAudio();
+    const kayit = B.onbellek.get(bulutAnahtar(p.soz));
+    const konum = p.basla[S.i - p.bas] / Math.max(1, p.toplam);
+    const surdur = !!(B.kaldi && B.kaldi.i === S.i && B.kaldi.n === n && kayit && a.src === kayit.url);
+    B.kaldi = null;
+    yerKaydet();
+    ciz();
+    bulutKunye();
+
+    if (kayit && B.calan === n && a.src === kayit.url) {
+      // Paket zaten yüklü: kaldığı yerden sürer ya da cümlenin başına atlar.
+      B.bekliyor = false;
+      B.degisti = performance.now();
+      if (!surdur && a.duration && isFinite(a.duration)) a.currentTime = a.duration * konum;
+      a.playbackRate = ayar.hiz;
+      a.play().catch(e => bulutCalmaHatasi(e));
+      bulutOnYukle(n + 1);
+      return;
+    }
+    if (kayit) {
+      bulutCal(n, kayit, konum, benim);
+    } else {
+      bulutSessizCal();
+      B.bekliyor = true;
+      bulutIstek(p.soz).then(k2 => {
+        if (benim !== oturum) return;
+        B.bekliyor = false;
+        bulutCal(n, k2, konum, benim);
+      }).catch(e => {
+        if (benim !== oturum) return;
+        B.bekliyor = false;
+        bulutHata(e);
+      });
+    }
+    bulutOnYukle(n + 1);
+  }
+
+  function bulutCal(n, kayit, konum, benim) {
+    const a = bulutAudio();
+    B.calan = n;
+    B.degisti = performance.now();
+    a.loop = false;
+    a.src = kayit.url;
+    a.playbackRate = ayar.hiz;
+    const basla = () => {
+      if (benim !== oturum) return;
+      if (konum > 0 && a.duration && isFinite(a.duration)) a.currentTime = a.duration * konum;
+      a.play().catch(e => bulutCalmaHatasi(e));
+    };
+    if (konum > 0) {
+      if (a.readyState >= 1) basla();
+      else a.addEventListener('loadedmetadata', basla, { once: true });
+    } else basla();
+  }
+
+  function bulutIlerledi() {
+    const a = B.audio;
+    if (!S.okuyor || B.calan < 0 || B.deneme || !a || a.src === B.sessiz || !a.duration || !isFinite(a.duration)) return;
+    const p = B.parcalar[B.calan];
+    if (!p) return;
+    const kon = (a.currentTime / a.duration) * p.toplam;
+    let k = p.bas;
+    for (let j = 1; j < p.basla.length; j++) { if (p.basla[j] <= kon + 1) k = p.bas + j; else break; }
+    if (k !== S.i) { S.i = k; yerKaydet(); ciz(); }
+  }
+
+  function bulutKaldigiYer() {
+    const a = B.audio;
+    if (!a || B.calan < 0 || a.src === B.sessiz) { B.kaldi = null; return; }
+    B.kaldi = { i: S.i, n: B.calan, t: a.currentTime };
+  }
+
+  function bulutDurdur() {
+    B.bekliyor = false;
+    if (B.audio && !B.audio.paused) { try { B.audio.pause(); } catch (e) { /* önemsiz */ } }
+  }
+
+  function bulutHiz() {
+    if (B.audio) B.audio.playbackRate = ayar.hiz;
+  }
+
+  function bulutCalmaHatasi(e) {
+    if (e && e.name === 'AbortError') return;
+    if (e && e.name === 'NotAllowedError') { duraklat(); bildir('Tarayıcı sesi başlatmadı. Oynat düğmesine yeniden basın.'); return; }
+    bulutHata(e);
+  }
+
+  function bulutHata(e) {
+    duraklat();
+    const yerel = sesler.find(v => !v.bulut);
+    const mesaj = azureHataMesaji(e);
+    if (yerel) bildir(mesaj, { ad: 'Cihaz sesiyle oku', is: () => { sesSec(yerel); konus(S.i); } });
+    else bildir(mesaj);
+  }
+
+  // Telefon araması ya da kilit ekranındaki durdurma düğmesi sesi dışarıdan
+  // durdurursa düğmeler de duraklatılmış görünsün.
+  function bulutNobet() {
+    const a = B.audio;
+    if (!a || !S.okuyor || !bulutMu() || B.bekliyor || B.deneme) return;
+    if (!a.paused || a.ended || a.src === B.sessiz) return;
+    if (performance.now() - B.degisti < 2500) return;
+    bulutKaldigiYer();
+    S.okuyor = false;
+    ciz();
+  }
+
+  function bulutDeneme() {
+    const okuyordu = S.okuyor;
+    if (okuyordu) bulutKaldigiYer();
+    sustur();
+    if (okuyordu) ciz();
+    const benim = ++oturum;
+    bulutSessizCal();
+    bulutIstek(DENEME, true).then(k => {
+      if (benim !== oturum) return;
+      const a = bulutAudio();
+      B.deneme = true;
+      B.calan = -1;
+      a.loop = false;
+      a.src = k.url;
+      a.playbackRate = ayar.hiz;
+      a.play().catch(() => { B.deneme = false; });
+    }).catch(e => {
+      if (benim !== oturum) return;
+      bulutDurdur();
+      bildir(azureHataMesaji(e));
+      if (el.pencere.open) azureDurumYaz(azureHataMesaji(e), 'hata');
+    });
+  }
+
+  function bulutKunye() {
+    if (!('mediaSession' in navigator) || !window.MediaMetadata) return;
+    try {
+      const ilk = (S.parcalar[0] ? S.parcalar[0].yazi : '').slice(0, 80);
+      navigator.mediaSession.metadata = new MediaMetadata({ title: ilk || 'Seslendir', artist: 'Seslendir' });
+    } catch (e) { /* desteklenmiyor */ }
+  }
+
+  function kumandayiBagla() {
+    if (!('mediaSession' in navigator)) return;
+    const bagla = (ad, is) => { try { navigator.mediaSession.setActionHandler(ad, is); } catch (e) { /* bu düğme yok */ } };
+    bagla('play', () => { if (!S.okuyor) oynatDuraklat(); });
+    bagla('pause', () => { if (S.okuyor) duraklat(); });
+    bagla('nexttrack', () => git(S.i + 1));
+    bagla('previoustrack', () => git(S.i - 1));
+  }
+
+  function sesSec(v) {
+    secili = v;
+    ayar.ses = v.voiceURI;
+    ayarKaydet();
+    sesSatiriniYaz();
+    if (el.pencere.open) sesListesiniYaz();
+  }
+
+  /* ---------- Azure ayar formu ---------- */
+
+  function azureDurumYaz(yazi, tur) {
+    el.azureDurum.textContent = yazi || '';
+    el.azureDurum.dataset.tur = tur || '';
+    el.azureDurum.hidden = !yazi;
+  }
+
+  function azureFormuDoldur() {
+    const a = ayar.azure || {};
+    el.azureAnahtar.value = a.anahtar || '';
+    el.azureBolge.value = a.bolge || '';
+    el.azureKaldir.hidden = !azureHazir();
+    el.azureKaydet.textContent = azureHazir() ? 'Kaydet ve dene' : 'Bağlan ve dene';
+    if (azureHazir()) {
+      const adlar = azureSesleri().map(v => v.name).join(', ');
+      azureDurumYaz('Bağlı. Sesler: ' + adlar + '.', 'ok');
+    } else azureDurumYaz('');
+  }
+
+  function azureKaydet() {
+    const anahtar = el.azureAnahtar.value.trim();
+    const bolge = el.azureBolge.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!anahtar || !bolge) { azureDurumYaz('Anahtar ve bölge alanlarının ikisi de gerekli.', 'hata'); return; }
+    el.azureBolge.value = bolge;
+    azureDurumYaz('Bağlanıyor…');
+    el.azureKaydet.disabled = true;
+    sustur();
+    bulutSessizCal(); // iPhone'da ses iznini bu dokunuşla alır
+    const onceki = ayar.azure;
+    fetch('https://' + bolge + '.tts.speech.microsoft.com/cognitiveservices/voices/list', { headers: { 'Ocp-Apim-Subscription-Key': anahtar } })
+      .then(y => { if (!y.ok) throw new Error('http ' + y.status); return y.json(); })
+      .then(liste => {
+        const tr = (Array.isArray(liste) ? liste : [])
+          .filter(v => v && v.Locale === 'tr-TR' && !/HD/i.test(v.ShortName || ''))
+          .map(v => ({ ad: v.ShortName, kisa: v.DisplayName || v.LocalName || v.ShortName, cinsiyet: v.Gender || '' }))
+          .sort((x, y) => (y.cinsiyet === 'Female') - (x.cinsiyet === 'Female'));
+        ayar.azure = { anahtar, bolge, sesler: tr.length ? tr : AZURE_VARSAYILAN };
+        if (!onceki || onceki.anahtar !== anahtar || onceki.bolge !== bolge) bulutOnbellekTemizle();
+        const yeni = azureSesleri();
+        const kadin = yeni.find(v => cins(v) === 'kadin') || yeni[0];
+        if (!onceki && kadin) ayar.ses = kadin.voiceURI;
+        ayarKaydet();
+        sesleriYukle();
+        sesListesiniYaz();
+        azureFormuDoldur();
+        const deneme = bulutMu();
+        azureDurumYaz('Bağlandı. Sesler: ' + yeni.map(v => v.name).join(', ') + '.' + (deneme ? ' Deneme cümlesi okunuyor.' : ''), 'ok');
+        if (deneme) bulutDeneme();
+      })
+      .catch(e => azureDurumYaz(azureHataMesaji(e), 'hata'))
+      .finally(() => { el.azureKaydet.disabled = false; });
+  }
+
+  function azureKaldir() {
+    sustur();
+    ayar.azure = null;
+    if (/^azure:/.test(ayar.ses || '')) ayar.ses = '';
+    ayarKaydet();
+    bulutOnbellekTemizle();
+    sesleriYukle();
+    sesListesiniYaz();
+    azureFormuDoldur();
+    azureDurumYaz('Azure anahtarı bu cihazdan silindi.', '');
+    ciz();
   }
 
   /* ---------- Ekran ---------- */
@@ -519,7 +959,7 @@
     el.uyg.dataset.durum = S.okuyor ? 'okuyor' : 'durdu';
 
     el.oynat.setAttribute('aria-label', S.okuyor ? 'Duraklat' : 'Oku');
-    el.oynat.disabled = !synth;
+    el.oynat.disabled = !synth && !azureHazir();
     el.hizYazi.textContent = hizYazisi(ayar.hiz);
     el.hiz.setAttribute('aria-label', 'Okuma hızı ' + hizYazisi(ayar.hiz) + '. Değiştirmek için basın.');
     el.temizle.hidden = !dolu;
@@ -554,7 +994,11 @@
         el.ozet.appendChild(document.createTextNode(sureYazisi(uz / (S.cps * ayar.hiz))));
       }
     }
-    ekraniAcikTut(S.okuyor);
+    // Azure sesinde ses dosyası çaldığı için ekran kapanabilir; kilit ekranından yönetilir.
+    ekraniAcikTut(S.okuyor && !bulutMu());
+    if ('mediaSession' in navigator) {
+      try { navigator.mediaSession.playbackState = S.okuyor ? 'playing' : (S.dinle ? 'paused' : 'none'); } catch (e) { /* desteklenmiyor */ }
+    }
   }
 
   function isaretle() {
@@ -659,6 +1103,7 @@
 
   function ayarlariAc() {
     sesListesiniYaz();
+    azureFormuDoldur();
     el.kisaltma.checked = !!ayar.kisaltma;
     const c = cihaz();
     let yazi = '';
@@ -693,7 +1138,9 @@
   el.hiz.addEventListener('click', () => {
     ayar.hiz = HIZLAR[(HIZLAR.indexOf(ayar.hiz) + 1) % HIZLAR.length];
     ayarKaydet();
-    if (S.okuyor) konus(S.i); else ciz();
+    if (S.okuyor && bulutMu()) { bulutHiz(); ciz(); }
+    else if (S.okuyor) konus(S.i);
+    else ciz();
   });
 
   el.metin.addEventListener('input', metinDegisti);
@@ -723,12 +1170,17 @@
     if (!e.target || e.target.tagName !== 'INPUT') return;
     const v = sesler[Number(e.target.value)];
     if (!v) return;
-    secili = v;
-    ayar.ses = v.voiceURI;
-    ayarKaydet();
-    sesSatiriniYaz();
+    sesSec(v);
     denemeOku();
   });
+
+  el.azureKaydet.addEventListener('click', azureKaydet);
+  el.azureKaldir.addEventListener('click', azureKaldir);
+  el.azureGoster.addEventListener('click', () => {
+    const acik = el.azureAnahtar.classList.toggle('acik');
+    el.azureGoster.textContent = acik ? 'Gizle' : 'Göster';
+  });
+  [el.azureAnahtar, el.azureBolge].forEach(g => g.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); azureKaydet(); } }));
 
   el.kisaltma.addEventListener('change', () => {
     ayar.kisaltma = el.kisaltma.checked;
@@ -753,7 +1205,7 @@
     // iPhone, uygulama arka plana geçince konuşmayı keser ve geri dönüşte her
     // zaman sürdürmez. Dönüşten sonra ses motorundan haber gelmiyorsa cümle
     // baştan okutulur.
-    if (arkadaKaldi && cihaz().ios) {
+    if (arkadaKaldi && cihaz().ios && !bulutMu()) {
       const benim = oturum;
       const donus = performance.now();
       setTimeout(() => { if (benim === oturum && S.okuyor && sonHaber < donus) konus(S.i); }, 1500);
@@ -762,6 +1214,7 @@
   window.addEventListener('pagehide', () => {
     metniKaydet();
     if (synth) { try { synth.cancel(); } catch (e) { /* sayfa kapanıyor */ } }
+    bulutDurdur();
   });
 
   /* ---------- Açılış ---------- */
@@ -776,14 +1229,16 @@
   if (synth) {
     // Önceki sayfadan kalmış bir konuşma varsa susturulur.
     try { synth.cancel(); } catch (e) { /* önemli değil */ }
-    sesleriYukle();
     if (typeof synth.addEventListener === 'function') synth.addEventListener('voiceschanged', sesleriYukle);
     else synth.onvoiceschanged = sesleriYukle;
     // Bazı tarayıcılar seslerin geldiğini haber vermez; birkaç kez yoklanır.
-    [250, 800, 2000, 4000].forEach(ms => setTimeout(() => { if (!sesler.length) sesleriYukle(); }, ms));
+    [250, 800, 2000, 4000].forEach(ms => setTimeout(() => { if (!sesler.some(v => !v.bulut)) sesleriYukle(); }, ms));
     setTimeout(() => { if (!S.seslerGeldi) { S.seslerGeldi = true; sesSatiriniYaz(); } }, 4500);
     setInterval(nobet, 1500);
-  } else sesSatiriniYaz();
+  }
+  sesleriYukle();
+  setInterval(bulutNobet, 1500);
+  kumandayiBagla();
 
   ciz();
 

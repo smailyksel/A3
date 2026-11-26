@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Seslendir</title>
-<meta name="description" content="Yazılan ya da yapıştırılan metni Türkçe kadın sesiyle okur.">
+<meta name="description" content="Yazılan ya da yapıştırılan metni Türkçe kadın sesiyle okur; cihazın kendi sesi ya da Azure Emel sesi.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0d0e11">
 <meta name="color-scheme" content="dark">
@@ -110,6 +110,27 @@
       <p class="uyari-kutu" id="sesUyari" hidden></p>
       <p class="ipucu" id="sesIpucu" hidden>Daha doğal bir ses için iPhone’da <b>Ayarlar › Erişilebilirlik › Seslendirilen İçerik › Sesler › Türkçe</b> yolunu izleyip Yelda’nın (ya da Cem’in) <b>Gelişmiş</b> sürümünü indirin. İndirme bittikten sonra bu uygulamayı tamamen kapatıp yeniden açın; yeni ses bu listede görünür.</p>
       <p class="kucuk" id="sesNot"></p>
+    </section>
+
+    <section class="bolum" id="azureBolum">
+      <h3 class="bas">İnternet sesi (Azure)</h3>
+      <p class="kucuk">Microsoft Azure’daki Konuşma kaynağınızın anahtarıyla Emel ve Ahmet sesleri kullanılır. Anahtar yalnızca bu cihazda saklanır; okunan metin Microsoft’un sunucusuna gönderilir.</p>
+      <div class="alan">
+        <label for="azureAnahtar">Anahtar</label>
+        <div class="alan-satir">
+          <input type="text" id="azureAnahtar" class="gizli-anahtar" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="ANAHTAR 1">
+          <button type="button" class="dugme dugme-kucuk dugme-sade" id="azureGoster">Göster</button>
+        </div>
+      </div>
+      <div class="alan">
+        <label for="azureBolge">Bölge</label>
+        <input type="text" id="azureBolge" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="northeurope">
+      </div>
+      <div class="alan-dugmeler">
+        <button type="button" class="dugme dugme-ana" id="azureKaydet">Bağlan ve dene</button>
+        <button type="button" class="dugme dugme-sade" id="azureKaldir" hidden>Kaldır</button>
+      </div>
+      <p class="kucuk durum" id="azureDurum" hidden></p>
     </section>
 
     <section class="bolum">

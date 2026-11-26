@@ -30,10 +30,10 @@ const DOSYALAR = [
   'fonts/marcellus-latin-ext-400-normal.woff2',
 ];
 
-// Yazıya dökme kitaplığı büyüktür (yaklaşık 15 MB). Kurulumu bekletmemek için
-// ayrıca alınır; alınamazsa ilk kullanımda indirilip saklanır.
+// Yazıya dökmenin hesap çekirdeği büyüktür (yaklaşık 14 MB). Kurulumu bekletmemek
+// için ayrıca alınır; alınamazsa ilk kullanımda indirilip saklanır. Yazıya dökme
+// kitaplığının kendisi başka bir adresten gelir ve yazici.js tarafından saklanır.
 const KITAPLIK = [
-  'vendor/transformers.min.js',
   'vendor/ort-wasm-simd-threaded.mjs',
   'vendor/ort-wasm-simd-threaded.wasm',
 ];
@@ -92,7 +92,7 @@ self.addEventListener('fetch', e => {
   const istek = e.request;
   if (istek.method !== 'GET') return;
   const url = new URL(istek.url);
-  // Model dosyaları başka bir adresten gelir; onlara dokunulmaz.
+  // Model dosyaları ve yazıya dökme kitaplığı başka adreslerden gelir; onlara dokunulmaz.
   if (url.origin !== self.location.origin || !url.pathname.startsWith(KAPSAM)) return;
   if (istek.mode === 'navigate') { e.respondWith(agOnce(istek, './')); return; }
   if (/\.(woff2|png|wasm|mjs)$/.test(url.pathname) || url.pathname.includes('/vendor/')) { e.respondWith(kopyaOnce(istek)); return; }

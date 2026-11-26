@@ -1,7 +1,7 @@
 /* Sesli Not: yazıya dökme işçisi.
    Konuşmayı cihazın içinde metne çevirir; ses hiçbir yere gönderilmez.
-   Model dosyaları ilk kullanımda bir kez indirilir ve tarayıcının deposunda
-   saklanır, sonraki kullanımlarda internet gerekmez.
+   Yazıya dökme kitaplığı ve model dosyaları ilk kullanımda bir kez indirilir
+   ve tarayıcının deposunda saklanır, sonraki kullanımlarda internet gerekmez.
 
    Ana sayfadan gelen iletiler:
      { tip: 'hazirla', model }             modeli indirir ve belleğe alır
@@ -15,16 +15,81 @@
      { tip: 'bitti', id, metin }
      { tip: 'hata', id, asama, mesaj }     asama: 'model' ya da 'yazim' */
 
-import { pipeline, env } from './vendor/transformers.min.js';
+/* Yazıya dökme kitaplığı (Transformers.js, Apache 2.0 lisanslı) uygulamayla birlikte gelmez;
+   ilk kullanımda jsDelivr adlı açık dağıtım ağından indirilir ve cihazda saklanır. İndirilen
+   dosyanın özeti aşağıdaki değerle karşılaştırılır; tutmazsa dosya çalıştırılmaz. Böylece
+   uygulama yalnızca denenmiş olan sürümle çalışır. Sürüm değişirse özet de değişmelidir;
+   vendor klasöründeki ONNX Runtime dosyaları da kitaplığın o sürümüyle gelenler olmalıdır. */
+const KITAPLIK_ADRES = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js';
+const KITAPLIK_OZET = '8b5a3171f8876bab2b1820a7d65eb87628e3d30bb5ea85b9dd398e76eb34decb'; // SHA-256
+const KITAPLIK_DEPO = 'sesli-not-kitaplik';
 
 const VENDOR = new URL('./vendor/', import.meta.url).href;
-env.allowLocalModels = false;
-env.useBrowserCache = true;
-env.backends.onnx.wasm.wasmPaths = {
-  mjs: VENDOR + 'ort-wasm-simd-threaded.mjs',
-  wasm: VENDOR + 'ort-wasm-simd-threaded.wasm',
-};
-env.backends.onnx.wasm.numThreads = 1;
+
+let kitaplik = null, kitaplikSoz = null;
+
+async function ozetAl(tampon) {
+  const o = new Uint8Array(await crypto.subtle.digest('SHA-256', tampon));
+  let s = '';
+  for (let i = 0; i < o.length; i++) s += o[i].toString(16).padStart(2, '0');
+  return s;
+}
+
+async function kitaplikGetir() {
+  let depo = null;
+  try { depo = await caches.open(KITAPLIK_DEPO); } catch (e) { /* depo yoksa her seferinde indirilir */ }
+  if (depo) {
+    const y = await depo.match(KITAPLIK_ADRES);
+    if (y) {
+      const t = await y.arrayBuffer();
+      if (await ozetAl(t) === KITAPLIK_OZET) return t;
+      await depo.delete(KITAPLIK_ADRES);
+    }
+  }
+  const y = await fetch(KITAPLIK_ADRES, { mode: 'cors', credentials: 'omit' });
+  if (!y.ok) throw new Error('Yazıya dökme kitaplığı indirilemedi (' + y.status + ')');
+  const t = await y.arrayBuffer();
+  if (await ozetAl(t) !== KITAPLIK_OZET) throw new Error('Yazıya dökme kitaplığı doğrulanamadı');
+  if (depo) {
+    try {
+      await depo.put(KITAPLIK_ADRES, new Response(t.slice(0), { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } }));
+      // Eski sürümden kalan kopya varsa silinir.
+      for (const k of await depo.keys()) if (k.url !== KITAPLIK_ADRES) await depo.delete(k);
+    } catch (e) { /* saklanamazsa bir sonraki açılışta yeniden indirilir */ }
+  }
+  return t;
+}
+
+async function kitaplikYukle() {
+  if (kitaplik) return kitaplik;
+  if (!kitaplikSoz) {
+    kitaplikSoz = (async () => {
+      const tampon = await kitaplikGetir();
+      // Özeti doğrulanan baytların kendisi çalıştırılır.
+      const adres = URL.createObjectURL(new Blob([tampon], { type: 'text/javascript' }));
+      let m;
+      try {
+        m = await import(adres);
+      } catch (e) {
+        // Bu yolu desteklemeyen bir tarayıcıda dosya, az önce doğrulanan adresten doğrudan alınır.
+        m = await import(KITAPLIK_ADRES);
+      } finally {
+        URL.revokeObjectURL(adres);
+      }
+      m.env.allowLocalModels = false;
+      m.env.useBrowserCache = true;
+      m.env.backends.onnx.wasm.wasmPaths = {
+        mjs: VENDOR + 'ort-wasm-simd-threaded.mjs',
+        wasm: VENDOR + 'ort-wasm-simd-threaded.wasm',
+      };
+      m.env.backends.onnx.wasm.numThreads = 1;
+      kitaplik = m;
+      return m;
+    })();
+    kitaplikSoz.then(() => {}, () => { kitaplikSoz = null; }); // başarısızsa yeniden denenebilsin
+  }
+  return kitaplikSoz;
+}
 
 // Sürümler sabitlenmiştir; kaynak depoda sonradan yapılacak bir değişiklik uygulamayı etkilemez.
 // Sürüm, kitaplığın "revision" seçeneğiyle değil indirme adresinin kalıbıyla verilir: kitaplık
@@ -49,21 +114,33 @@ async function hazirla(kod) {
 
   const inen = new Map();
   let sonIleti = 0;
-  env.remotePathTemplate = '{model}/resolve/' + m.surum + '/';
-  const soz = pipeline('automatic-speech-recognition', m.ad, {
-    dtype: 'q8',
-    device: 'wasm',
-    progress_callback: b => {
-      if (!b || b.status !== 'progress' || !b.file) return;
-      inen.set(b.file, b.loaded || 0);
-      const simdi = Date.now();
-      if (simdi - sonIleti < 120) return;
-      sonIleti = simdi;
-      let t = 0;
-      for (const v of inen.values()) t += v;
-      postMessage({ tip: 'indirme', model: kod, oran: Math.min(0.99, t / m.boyut) });
-    },
-  }).then(p => {
+  const ilerle = b => {
+    if (!b || b.status !== 'progress' || !b.file) return;
+    inen.set(b.file, b.loaded || 0);
+    const simdi = Date.now();
+    if (simdi - sonIleti < 120) return;
+    sonIleti = simdi;
+    let t = 0;
+    for (const v of inen.values()) t += v;
+    postMessage({ tip: 'indirme', model: kod, oran: Math.min(0.99, t / m.boyut) });
+  };
+  // Geçici bir ağ ya da sunucu arızasında indirme iki kez daha denenir; inen dosyalar
+  // saklandığı için yeniden deneme kaldığı yerden sürer.
+  const yukle = async () => {
+    const BEKLEME = [3000, 8000];
+    for (let deneme = 0; ; deneme++) {
+      try {
+        const { pipeline, env } = await kitaplikYukle();
+        env.remotePathTemplate = '{model}/resolve/' + m.surum + '/';
+        return await pipeline('automatic-speech-recognition', m.ad, { dtype: 'q8', device: 'wasm', progress_callback: ilerle });
+      } catch (e) {
+        const cevrimdisi = typeof navigator !== 'undefined' && navigator.onLine === false;
+        if (deneme >= BEKLEME.length || cevrimdisi) throw e;
+        await new Promise(coz => setTimeout(coz, BEKLEME[deneme]));
+      }
+    }
+  };
+  const soz = yukle().then(p => {
     hat = p; hatModel = kod; yuklenen = null;
     postMessage({ tip: 'hazir', model: kod });
     return p;

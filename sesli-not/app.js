@@ -96,6 +96,15 @@
   let acik = null;                 // açık kayıt penceresi
 
   const notBul = id => notlar.find(n => n.id === id);
+
+  // Hata iletisindeki uzun adresler "sunucu/…/dosya" biçimine indirilir.
+  function ayrintiKisalt(mesaj) {
+    return String(mesaj || '')
+      .replace(/https?:\/\/([^\/\s"']+)\/[^\s"']*?([^\/\s"']+)(?=["'\s]|$)/g, '$1/…/$2')
+      .replace(/\s+/g, ' ').trim().slice(0, 160);
+  }
+  // Sunucu yoğunken ya da geçici bir arıza verdiğinde dönen yanıtlar.
+  const sunucuYogun = mesaj => /\((429|5\d\d)\)/.test(String(mesaj || ''));
   const kimlik = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
   /* ---------- Tarih ve süre ---------- */
@@ -741,7 +750,7 @@
       indirme = null;
       if (d.id) {
         const n = notBul(d.id);
-        if (n) { n.durum = 'hata'; n.hata = modelHatasi ? 'model' : 'yazim'; n.ayrinti = String(d.mesaj || '').slice(0, 200); await notYaz(n).catch(() => {}); }
+        if (n) { n.durum = 'hata'; n.hata = modelHatasi ? 'model' : 'yazim'; n.ayrinti = ayrintiKisalt(d.mesaj); await notYaz(n).catch(() => {}); }
       }
       if (modelHatasi) {
         // İndirme başarısızsa sıradakiler de başarısız olur; kuyruk boşaltılır, kayıtlar bekler.
@@ -749,10 +758,12 @@
         indirmeOnayi = false;
         serit = {
           uyari: true,
-          ayrinti: String(d.mesaj || '').slice(0, 200),
+          ayrinti: ayrintiKisalt(d.mesaj),
           metin: navigator.onLine === false
             ? 'Yazıya dökme modeli indirilemedi; internet bağlantısı yok. Kayıtlarınız duruyor, bağlantı gelince yeniden deneyebilirsiniz.'
-            : 'Yazıya dökme modeli indirilemedi. Kayıtlarınız duruyor; bağlantınızı denetleyip yeniden deneyebilirsiniz.',
+            : sunucuYogun(d.mesaj)
+              ? 'Model sunucusu şu an yanıt vermiyor. Kayıtlarınız duruyor; birkaç dakika sonra yeniden deneyebilirsiniz.'
+              : 'Yazıya dökme modeli indirilemedi. Kayıtlarınız duruyor; bağlantınızı denetleyip yeniden deneyebilirsiniz.',
           islemler: [{ yazi: 'Yeniden dene', act: bekleyenler().length ? 'bekleyenleri-yaz' : 'model-indir' }, { yazi: 'Kapat', act: 'serit-kapat' }],
         };
       } else if (d.id) {
@@ -1021,7 +1032,7 @@
         </section>
         <section class="ayar-bolum">
           <h3 class="bas">Gizlilik</h3>
-          <p>Ses kaydı ve yazıya dökme bu cihazın içinde yapılır; sesiniz ve metinleriniz internete gönderilmez. İnternet yalnızca uygulamanın kendi dosyaları ve model dosyası indirilirken kullanılır; model, Hugging Face adlı açık model deposundan gelir.</p>
+          <p>Ses kaydı ve yazıya dökme bu cihazın içinde yapılır; sesiniz ve metinleriniz internete gönderilmez. İnternet yalnızca uygulamanın kendi dosyaları, yazıya dökme kitaplığı ve model dosyası indirilirken kullanılır; kitaplık jsDelivr, model ise Hugging Face adlı açık depolardan gelir.</p>
           ${ayakta ? '' : '<p>Ana ekrana eklemek için Safari\'de Paylaş düğmesine, ardından "Ana Ekrana Ekle" seçeneğine dokunun.</p>'}
           <p class="surum">Sesli Not ${SURUM}</p>
         </section>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sesli Not</title>
+<meta name="description" content="Konuşun, yazıya dökülsün. Kayıtlar ve metinler yalnızca bu cihazda tutulur.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0e11">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sesli Not">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg class="gizli-svg" aria-hidden="true" focusable="false">
+  <symbol id="i-mikrofon" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7"/></symbol>
+  <symbol id="i-ayar" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="i-kapat" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-ara" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+  <symbol id="i-oynat" viewBox="0 0 24 24"><path d="M8.5 5.5v13l10-6.5z" fill="currentColor"/></symbol>
+  <symbol id="i-durakla" viewBox="0 0 24 24"><path d="M8.5 6v12M15.5 6v12" stroke-width="2.6"/></symbol>
+  <symbol id="i-kopya" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M5.5 15.5h-1v-11h11v1"/></symbol>
+  <symbol id="i-paylas" viewBox="0 0 24 24"><path d="M12 15V4M8 7.5l4-4 4 4M6 11.5V19h12v-7.5"/></symbol>
+  <symbol id="i-indir" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/></symbol>
+</svg>
+
+<a class="atla" href="#icerik">İçeriğe geç</a>
+
+<div class="uyg">
+  <header class="ust">
+    <div class="ust-yazi">
+      <p class="ust-etiket" id="ustEtiket"></p>
+      <h1>Sesli Not</h1>
+    </div>
+    <div class="ust-islem">
+      <button type="button" class="simge-dugme" data-act="ayarlar" aria-label="Ayarlar"><svg class="ikon" aria-hidden="true"><use href="#i-ayar"/></svg></button>
+    </div>
+  </header>
+
+  <main class="icerik" id="icerik" tabindex="-1">
+    <div class="serit" id="serit" hidden></div>
+    <div class="ara" id="araKutu" hidden>
+      <svg class="ikon" aria-hidden="true"><use href="#i-ara"/></svg>
+      <input type="search" id="ara" placeholder="Notlarda ara" autocomplete="off" aria-label="Notlarda ara">
+    </div>
+    <ul class="liste" id="liste"></ul>
+    <div id="bos" hidden></div>
+    <noscript><p class="bos">Bu uygulamanın çalışması için tarayıcıda JavaScript açık olmalıdır.</p></noscript>
+  </main>
+
+  <div class="kayit-cubugu">
+    <button type="button" class="kayit-dugme" id="kayitDugme" data-act="kayit" aria-label="Kayda başla"><svg class="ikon" aria-hidden="true"><use href="#i-mikrofon"/></svg></button>
+    <p class="kayit-ipucu" id="kayitIpucu">Konuşmak için dokunun</p>
+  </div>
+</div>
+
+<section class="kayit-ekrani" id="kayitEkrani" role="dialog" aria-modal="true" aria-label="Ses kaydı" hidden>
+  <p class="kayit-etiket" id="kayitEtiket"><i aria-hidden="true"></i><span>Kaydediliyor</span></p>
+  <p class="kayit-sure" id="kayitSure" role="timer" aria-live="off"></p>
+  <canvas class="dalga" id="dalga" aria-hidden="true"></canvas>
+  <p class="kayit-not">Ekran açık kaldığı sürece kayıt devam eder.</p>
+  <div class="kayit-islem">
+    <button type="button" class="dugme dugme-sade" data-act="kayit-iptal">Vazgeç</button>
+    <button type="button" class="durdur-dugme" data-act="kayit-bitir" aria-label="Kaydı bitir ve sakla"><i aria-hidden="true"></i></button>
+    <button type="button" class="dugme dugme-sade" data-act="kayit-duraklat" id="duraklatDugme">Duraklat</button>
+  </div>
+</section>
+
+<dialog class="pencere" id="pencere"></dialog>
+<dialog class="pencere pencere-kucuk" id="onay"></dialog>
+<div class="bildirim" id="bildirim" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

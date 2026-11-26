@@ -7,9 +7,9 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Av. İsmail Savaş Yüksel, Ankara Barosu. Büro adresi: İlkbahar Mahallesi Konrad Adenauer Caddesi 75/7 Çankaya / Ankara.">
 <link rel="canonical" href="https://smailyksel.github.io/A3/">
-<meta name="theme-color" content="#0d0e11">
+<meta name="theme-color" content="#120e0a">
 <meta name="format-detection" content="telephone=no">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d0e11'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23120e0a'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
@@ -31,6 +31,7 @@
       <a class="marka" href="#ust">Av. İsmail Savaş Yüksel</a>
       <nav class="menu" aria-label="Bölümler">
         <a href="#calisma-alanlari">Çalışma Alanları</a>
+        <a href="#calisma-esaslari">Çalışma Esasları</a>
         <a href="#iletisim">İletişim</a>
       </nav>
       <a class="dugme dugme-ana bas-ara" href="tel:+905457170023">
@@ -43,11 +44,14 @@
 
   <main id="icerik">
     <section class="acilis">
+      <div class="acilis-foto" aria-hidden="true">
+        <img src="assets/img/buro-1600.webp" srcset="assets/img/buro-960.webp 960w, assets/img/buro-1600.webp 1600w" sizes="100vw" width="1600" height="900" alt="" decoding="async" fetchpriority="high">
+      </div>
       <div class="wrap acilis-ic">
         <div class="acilis-yazi">
           <p class="ust-etiket">Avukat · Ankara Barosu</p>
           <h1>İsmail Savaş Yüksel</h1>
-          <p class="tanim">Ceza hukuku, aile hukuku ve sağlık hukuku alanlarında avukatlık ve hukuki danışmanlık hizmeti verilmektedir.</p>
+          <p class="tanim">Ceza hukuku, aile hukuku ve sağlık hukuku alanlarında müdafilik ve vekalet görevi üstlenilmekte, hukuki danışmanlık hizmeti verilmektedir.</p>
           <div class="dugmeler">
             <a class="dugme dugme-ana" href="tel:+905457170023">
               <svg class="ikon"><use href="#i-tel"/></svg>
@@ -56,32 +60,29 @@
             <a class="dugme dugme-ikincil" href="#calisma-alanlari">Çalışma Alanları</a>
           </div>
         </div>
-
-        <aside class="kunye-kutu" aria-label="Büro bilgileri">
-          <p class="kunye-bas">Büro Bilgileri</p>
-          <dl class="kunye">
-            <div><dt>Baro</dt><dd>Ankara Barosu</dd></div>
-            <div><dt>Sicil No</dt><dd>38020</dd></div>
-            <div><dt>Büro</dt><dd>İlkbahar Mahallesi Konrad Adenauer Caddesi 75/7 Çankaya / Ankara</dd></div>
-          </dl>
-        </aside>
       </div>
     </section>
+
+    <div class="wrap kunye-serit">
+      <dl class="kunye" aria-label="Büro bilgileri">
+        <div><dt>Baro</dt><dd>Ankara Barosu</dd></div>
+        <div><dt>Büro</dt><dd>İlkbahar Mahallesi Konrad Adenauer Caddesi 75/7 Çankaya / Ankara</dd></div>
+      </dl>
+    </div>
 
     <section class="bolum" id="calisma-alanlari" aria-labelledby="b-alanlar">
       <div class="wrap">
         <div class="bolum-bas">
+          <p class="bolum-ust">Faaliyet Konuları</p>
           <h2 id="b-alanlar">Çalışma Alanları</h2>
-          <p>Aşağıdaki alanlar büronun faaliyet konularını göstermek içindir; uzmanlık beyanı niteliği taşımaz.</p>
+          <p>Büronun faaliyet gösterdiği alanlar aşağıda özetlenmiştir. Bu bilgiler uzmanlık beyanı niteliği taşımaz.</p>
         </div>
 
         <ul class="alanlar">
           <li class="alan" id="alan-ceza">
-            <div class="alan-bas">
-              <svg class="ikon"><use href="#i-ceza"/></svg>
-              <h3>Ceza Hukuku</h3>
-            </div>
-            <p>Soruşturma ve kovuşturma evrelerinde şüpheli ve sanık müdafiliği ile mağdur, şikayetçi ve katılan vekilliği yürütülmektedir. İfade ve sorgu işlemleri, tutukluluğa itiraz, duruşmaların takibi, istinaf ve temyiz başvuruları ile infaz aşamasına ilişkin işlemler bu kapsamdadır.</p>
+            <span class="hale"><svg class="ikon"><use href="#i-ceza"/></svg></span>
+            <h3>Ceza Hukuku</h3>
+            <p>Soruşturma evresinden hükmün kesinleşmesine ve infaz aşamasına kadar ceza muhakemesinin her evresinde şüpheli ve sanık müdafiliği ile mağdur, şikayetçi ve katılan vekilliği üstlenilmektedir. İfade ve sorgu işlemleri, tutukluluğa itiraz, duruşmaların takibi ile istinaf ve temyiz başvuruları bu kapsamda yürütülür.</p>
             <div class="mevzuat">
               <span class="mevzuat-et">İlgili mevzuat</span>
               <ul>
@@ -93,11 +94,9 @@
           </li>
 
           <li class="alan" id="alan-aile">
-            <div class="alan-bas">
-              <svg class="ikon"><use href="#i-aile"/></svg>
-              <h3>Aile ve Boşanma Hukuku</h3>
-            </div>
-            <p>Anlaşmalı ve çekişmeli boşanma davaları ile velayet, çocukla kişisel ilişki kurulması, nafaka, maddi ve manevi tazminat ve mal rejiminin tasfiyesine ilişkin davalar takip edilmektedir. Koruyucu ve önleyici tedbir başvuruları da bu alandaki işler arasındadır.</p>
+            <span class="hale"><svg class="ikon"><use href="#i-aile"/></svg></span>
+            <h3>Aile ve Boşanma Hukuku</h3>
+            <p>Anlaşmalı ve çekişmeli boşanma davaları, velayet ve çocukla kişisel ilişki kurulması, nafaka, maddi ve manevi tazminat talepleri ile mal rejiminin tasfiyesinden doğan davalarda vekalet görevi üstlenilmektedir. Koruyucu ve önleyici tedbir kararlarına ilişkin başvurular da bu alanda takip edilir.</p>
             <div class="mevzuat">
               <span class="mevzuat-et">İlgili mevzuat</span>
               <ul>
@@ -108,11 +107,9 @@
           </li>
 
           <li class="alan" id="alan-saglik">
-            <div class="alan-bas">
-              <svg class="ikon"><use href="#i-saglik"/></svg>
-              <h3>Sağlık Hukuku</h3>
-            </div>
-            <p>Tıbbi uygulama hatası iddialarına dayanan tazminat davaları ile bu iddialar nedeniyle yürütülen ceza soruşturma ve kovuşturmaları takip edilmektedir. Aydınlatılmış onam, hasta hakları ve hekimin hukuki ve cezai sorumluluğuna ilişkin uyuşmazlıklar bu kapsamdadır.</p>
+            <span class="hale"><svg class="ikon"><use href="#i-saglik"/></svg></span>
+            <h3>Sağlık Hukuku</h3>
+            <p>Tıbbi uygulama hatası iddialarına dayanan maddi ve manevi tazminat davaları ile aynı iddialar nedeniyle yürütülen ceza soruşturma ve kovuşturmaları takip edilmektedir. Aydınlatılmış onam, hasta hakları ile hekimin hukuki ve cezai sorumluluğuna ilişkin uyuşmazlıklar bu kapsamdadır.</p>
             <div class="mevzuat">
               <span class="mevzuat-et">İlgili mevzuat</span>
               <ul>
@@ -126,16 +123,49 @@
       </div>
     </section>
 
+    <section class="bolum bolum-esas" id="calisma-esaslari" aria-labelledby="b-esaslar">
+      <div class="wrap">
+        <div class="bolum-bas">
+          <p class="bolum-ust">Mesleki Yükümlülükler</p>
+          <h2 id="b-esaslar">Çalışma Esasları</h2>
+          <p>Büronun çalışma düzeni, Avukatlık Kanunu'nun avukata yüklediği yükümlülüklere dayanır.</p>
+        </div>
+
+        <ul class="esaslar">
+          <li class="esas">
+            <h3>Gizlilik</h3>
+            <p>Büroya tevdi edilen ve görev dolayısıyla öğrenilen bilgiler açıklanmaz; meslek sırrı olarak korunur.</p>
+            <span class="esas-kaynak">Avukatlık Kanunu m. 36</span>
+          </li>
+          <li class="esas">
+            <h3>Özen ve Doğruluk</h3>
+            <p>Üstlenilen görev, mesleğin gerektirdiği özen, doğruluk ve onur içinde yerine getirilir.</p>
+            <span class="esas-kaynak">Avukatlık Kanunu m. 34</span>
+          </li>
+          <li class="esas">
+            <h3>Bağımsızlık</h3>
+            <p>Savunma ve vekalet görevi, mesleki bağımsızlık içinde serbestçe yürütülür.</p>
+            <span class="esas-kaynak">Avukatlık Kanunu m. 1</span>
+          </li>
+          <li class="esas">
+            <h3>Bilgilendirme</h3>
+            <p>Dosyadaki gelişmeler ve izlenecek yol hakkında müvekkile zamanında bilgi verilir.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <section class="bolum bolum-iletisim" id="iletisim" aria-labelledby="b-iletisim">
       <div class="wrap">
         <div class="bolum-bas">
+          <p class="bolum-ust">İletişim Bilgileri</p>
           <h2 id="b-iletisim">Büro ve İletişim</h2>
-          <p>Görüşme ve randevu talepleri için aşağıdaki bilgiler kullanılabilir.</p>
+          <p>Görüşme ve randevu talepleriniz için aşağıdaki iletişim bilgilerini kullanabilirsiniz.</p>
         </div>
 
         <ul class="kanallar">
           <li class="kanal">
-            <svg class="ikon"><use href="#i-tel"/></svg>
+            <span class="hale"><svg class="ikon"><use href="#i-tel"/></svg></span>
             <div class="kanal-govde">
               <span class="kanal-et">Telefon</span>
               <a class="kanal-deger" id="deger-telefon" href="tel:+905457170023">0 (545) 717 00 23</a>
@@ -146,7 +176,7 @@
             </div>
           </li>
           <li class="kanal">
-            <svg class="ikon"><use href="#i-posta"/></svg>
+            <span class="hale"><svg class="ikon"><use href="#i-posta"/></svg></span>
             <div class="kanal-govde">
               <span class="kanal-et">E-posta</span>
               <a class="kanal-deger" id="deger-eposta" href="mailto:ismailsavasyuksel@gmail.com">ismailsavasyuksel@gmail.com</a>
@@ -157,7 +187,7 @@
             </div>
           </li>
           <li class="kanal">
-            <svg class="ikon"><use href="#i-adres"/></svg>
+            <span class="hale"><svg class="ikon"><use href="#i-adres"/></svg></span>
             <div class="kanal-govde">
               <span class="kanal-et">Adres</span>
               <span class="kanal-deger" id="deger-adres">İlkbahar Mahallesi Konrad Adenauer Caddesi 75/7 Çankaya / ANKARA</span>
@@ -171,7 +201,6 @@
         <dl class="kimlik">
           <div><dt>Avukat</dt><dd>İsmail Savaş Yüksel</dd></div>
           <div><dt>Baro</dt><dd>Ankara Barosu</dd></div>
-          <div><dt>Sicil No</dt><dd>38020</dd></div>
         </dl>
       </div>
     </section>
@@ -181,7 +210,7 @@
     <div class="wrap alt-ic">
       <div class="alt-kimlik">
         <p class="alt-ad">Av. İsmail Savaş Yüksel</p>
-        <p>Ankara Barosu Sicil No: 38020</p>
+        <p>Ankara Barosu</p>
         <p>İlkbahar Mahallesi Konrad Adenauer Caddesi 75/7 Çankaya / ANKARA</p>
       </div>
       <div class="alt-not">

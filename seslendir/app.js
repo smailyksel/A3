@@ -19,7 +19,7 @@
     hiz: $('hiz'), hizYazi: $('hizYazi'), geri: $('geri'), oynat: $('oynat'), ileri: $('ileri'), bastan: $('bastan'),
     sesSatiri: $('sesSatiri'), sesYazi: $('sesYazi'),
     ayarAc: $('ayarAc'), pencere: $('pencere'), pencereKapat: $('pencereKapat'),
-    sesListesi: $('sesListesi'), sesUyari: $('sesUyari'), sesNot: $('sesNot'),
+    sesListesi: $('sesListesi'), sesUyari: $('sesUyari'), sesNot: $('sesNot'), sesIpucu: $('sesIpucu'),
     kisaltma: $('kisaltma'), kurulum: $('kurulum'), kurulumYazi: $('kurulumYazi'),
     bildirim: $('bildirim'),
   };
@@ -213,22 +213,36 @@
     return 'belirsiz';
   };
 
+  // Aynı adlı sesin temel ve gelişmiş sürümleri ancak kimliğinden ayırt edilir
+  // (iPhone'da ikisinin de adı "Yelda"dır).
+  const kalite = v => {
+    const k = ((v.voiceURI || '') + ' ' + (v.name || '')).toLowerCase();
+    if (/premium/.test(k)) return 'premium';
+    if (/enhanced|natural|neural|geliştirilmiş|doğal/.test(k)) return 'gelismis';
+    return 'temel';
+  };
+
   function sesPuani(v) {
-    const ad = (v.name || '').toLowerCase();
     const c = cins(v);
+    const k = kalite(v);
     let p = c === 'kadin' ? 100 : c === 'erkek' ? -100 : 0;
-    if (/natural|neural|doğal/.test(ad)) p += 30;
-    if (/enhanced|premium|geliştirilmiş|yüksek/.test(ad)) p += 20;
-    if (/compact/.test(ad)) p -= 5;
+    if (k === 'premium') p += 40;
+    else if (k === 'gelismis') p += 30;
+    if (/compact/.test((v.voiceURI || '').toLowerCase())) p -= 5;
     if (v.default) p += 1;
     return p;
   }
 
   function sesAdi(v) {
     let ad = (v.name || '').replace(/\s*-\s*Turkish.*$/i, '').replace(/^Microsoft\s+/i, '')
-      .replace(/\bOnline\b/i, '').replace(/\(Natural\)/i, '(doğal)').replace(/\(Enhanced\)/i, '(geliştirilmiş)')
+      .replace(/\bOnline\b/i, '').replace(/\(Natural\)/i, '(doğal)').replace(/\(Enhanced\)/i, '(gelişmiş)')
       .replace(/\(Premium\)/i, '(üst kalite)').replace(/\s+/g, ' ').trim();
     if (!ad || /^(turkish|tr[-_]tr)/i.test(ad)) ad = 'Türkçe';
+    const uri = (v.voiceURI || '').toLowerCase();
+    if (!/\(/.test(ad)) {
+      if (/premium/.test(uri)) ad += ' (üst kalite)';
+      else if (/enhanced/.test(uri)) ad += ' (gelişmiş)';
+    }
     return ad;
   }
 
@@ -241,7 +255,7 @@
     const gorulen = new Set();
     const tr = hepsi.filter(v => {
       if (!/^tr(?:[-_]|$)/i.test(v.lang || '')) return false;
-      const k = v.name + '|' + v.lang;
+      const k = v.voiceURI || (v.name + '|' + v.lang);
       if (gorulen.has(k)) return false;
       gorulen.add(k);
       return true;
@@ -321,6 +335,10 @@
     el.sesNot.textContent = sesler.length
       ? 'Cihazda çalışan seslerde metin cihazdan çıkmaz. İnternet üzerinden çalışan seslerde metin, sesi üreten şirketin sunucusuna gönderilir.'
       : '';
+
+    // iPhone'da yalnızca temel ses varsa gelişmiş sürümün nereden indirileceği söylenir.
+    const ipucu = cihaz().ios && sesler.length > 0 && !sesler.some(v => kalite(v) !== 'temel');
+    el.sesIpucu.hidden = !ipucu;
   }
 
   /* ---------- Okuma ---------- */

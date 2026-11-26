@@ -376,6 +376,12 @@ input[type="range"]:disabled::-moz-range-thumb { visibility: hidden; }
 }
 .kucuk { font-size: 0.8125rem; line-height: 1.5; color: var(--soluk); }
 #sesNot { margin-top: 10px; }
+.ipucu {
+  margin-top: 10px; padding: 10px 12px 10px 14px;
+  border-left: 2px solid var(--vurgu); background: var(--vurgu-zemin); border-radius: 0 var(--r-k) var(--r-k) 0;
+  font-size: 0.875rem; line-height: 1.5; color: var(--yazi);
+}
+.ipucu b { font-weight: 600; color: var(--vurgu-acik); }
 
 .ses-sec {
   display: flex; align-items: center; gap: 12px;

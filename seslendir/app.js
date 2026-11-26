@@ -548,6 +548,7 @@
     onbellek: new Map(),   // ses|söz -> { url }
     bekleyen: new Map(),   // ses|söz -> Promise
     audio: null,
+    tutucu: null,          // okuma boyunca dönen sessiz ses: iPhone arka planda uygulamayı uyutmasın
     sessiz: '',
     calan: -1,             // çalan paket
     bekliyor: false,       // paket indiriliyor
@@ -622,6 +623,26 @@
     yaz(36, 'data'); v.setUint32(40, n, true);
     for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);
     try { return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' })); } catch (e) { return ''; }
+  }
+
+  // iPhone, hiçbir ses çalmadığı anda arka plandaki uygulamayı durdurur; iki
+  // paket arasındaki o an bile yeter. Okuma boyunca ikinci bir öğede sessiz
+  // bir döngü çalınır, böylece sonraki paket arka planda da başlayabilir.
+  function bulutTutucuBaslat() {
+    if (!B.sessiz) return;
+    if (!B.tutucu) {
+      const t = new Audio();
+      t.loop = true;
+      t.preload = 'auto';
+      t.setAttribute('playsinline', '');
+      t.src = B.sessiz;
+      B.tutucu = t;
+    }
+    if (B.tutucu.paused) B.tutucu.play().catch(() => {});
+  }
+
+  function bulutTutucuDurdur() {
+    if (B.tutucu && !B.tutucu.paused) { try { B.tutucu.pause(); } catch (e) { /* önemsiz */ } }
   }
 
   function bulutSessizCal() {
@@ -726,6 +747,7 @@
     yerKaydet();
     ciz();
     bulutKunye();
+    bulutTutucuBaslat();
 
     if (kayit && B.calan === n && a.src === kayit.url) {
       // Paket zaten yüklü: kaldığı yerden sürer ya da cümlenin başına atlar.
@@ -735,6 +757,7 @@
       a.playbackRate = ayar.hiz;
       a.play().catch(e => bulutCalmaHatasi(e));
       bulutOnYukle(n + 1);
+      bulutOnYukle(n + 2);
       return;
     }
     if (kayit) {
@@ -753,6 +776,7 @@
       });
     }
     bulutOnYukle(n + 1);
+    bulutOnYukle(n + 2);
   }
 
   function bulutCal(n, kayit, konum, benim) {
@@ -793,6 +817,7 @@
   function bulutDurdur() {
     B.bekliyor = false;
     if (B.audio && !B.audio.paused) { try { B.audio.pause(); } catch (e) { /* önemsiz */ } }
+    bulutTutucuDurdur();
   }
 
   function bulutHiz() {
@@ -822,6 +847,7 @@
     if (performance.now() - B.degisti < 2500) return;
     bulutKaldigiYer();
     S.okuyor = false;
+    bulutTutucuDurdur();
     ciz();
   }
 

@@ -4,7 +4,7 @@
    burada değil, tarayıcı deposunda durur.
    Dosyalarda değişiklik yapıldığında SURUM artırılmalıdır. */
 
-const SURUM = 'seslendir-v4';
+const SURUM = 'seslendir-v5';
 
 const DOSYALAR = [
   './',

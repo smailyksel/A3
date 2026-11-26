@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Belge Dönüştür</title>
+<meta name="description" content="Word, PDF, UDF ve JPEG dosyalarını birbirine dönüştürür, belgeleri birleştirir, parmakla imza ekler. Dosyalar cihazdan çıkmaz.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0e11">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dönüştür">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg class="gizli-svg" aria-hidden="true" focusable="false">
+  <symbol id="i-donustur" viewBox="0 0 24 24"><path d="M4.5 9.5h13M14 5.5l4 4-4 4M19.5 15.5h-13M10 11.5l-4 4 4 4"/></symbol>
+  <symbol id="i-birlestir" viewBox="0 0 24 24"><rect x="4" y="3.5" width="10" height="13" rx="1.6"/><path d="M10 20.5h8.4a1.6 1.6 0 0 0 1.6-1.6V7.5"/><path d="M7 8h4M7 11.5h4"/></symbol>
+  <symbol id="i-imza" viewBox="0 0 24 24"><path d="M3.5 17.5c2.2-4.6 4.4-8.6 6-8.6 1.9 0-.9 6.6 1 6.6 1.3 0 2.1-3 3.4-3 1 0 .7 2.2 1.9 2.2.9 0 1.6-.8 2.4-.8"/><path d="M3.5 20.5h17"/></symbol>
+  <symbol id="i-dosya" viewBox="0 0 24 24"><path d="M6.5 3.5h7.5L18.5 8v12.5h-12z"/><path d="M14 3.5V8h4.5"/></symbol>
+  <symbol id="i-yukle" viewBox="0 0 24 24"><path d="M12 15.5v-11M7.5 9 12 4.5 16.5 9M5 19.5h14"/></symbol>
+  <symbol id="i-indir" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/></symbol>
+  <symbol id="i-paylas" viewBox="0 0 24 24"><path d="M12 15V4M8 7.5l4-4 4 4M6 11.5V19h12v-7.5"/></symbol>
+  <symbol id="i-arti" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-kapat" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-yukari" viewBox="0 0 24 24"><path d="m6 14.5 6-6 6 6"/></symbol>
+  <symbol id="i-asagi" viewBox="0 0 24 24"><path d="m6 9.5 6 6 6-6"/></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+  <symbol id="i-sag" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-tik" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-kilit" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+  <symbol id="i-bilgi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.6v.2"/></symbol>
+  <symbol id="i-sil" viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V4.5h5V7M7 7l.8 12.5h8.4L17 7"/></symbol>
+  <symbol id="i-kalem" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5l3 3L8 19z"/></symbol>
+  <symbol id="i-kopya" viewBox="0 0 24 24"><rect x="8" y="8" width="11.5" height="11.5" rx="1.8"/><path d="M5 15.5V6.2A1.7 1.7 0 0 1 6.7 4.5H15"/></symbol>
+  <symbol id="i-uyari" viewBox="0 0 24 24"><path d="M12 4.5 3.5 19.5h17z"/><path d="M12 10.5v4.2M12 17v.2"/></symbol>
+</svg>
+
+<div class="uyg" id="uyg" data-sekme="donustur">
+  <header class="ust">
+    <div class="ust-yazi">
+      <p class="ust-etiket">Word · PDF · UDF · JPEG</p>
+      <h1 id="baslik">Belge Dönüştür</h1>
+    </div>
+    <button type="button" class="simge-dugme" id="bilgiAc" aria-label="Uygulama hakkında"><svg class="ikon" aria-hidden="true"><use href="#i-bilgi"/></svg></button>
+  </header>
+
+  <main class="icerik" id="icerik">
+
+    <!-- Dönüştür -->
+    <section class="pano" id="panoDonustur" data-pano="donustur" aria-labelledby="sekmeDonustur">
+      <label class="birak" id="dBirak">
+        <input type="file" id="dSec" class="gizli" multiple accept=".docx,.pdf,.udf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+        <span class="birak-ikon"><svg class="ikon" aria-hidden="true"><use href="#i-yukle"/></svg></span>
+        <b>Dosya seçin</b>
+        <span>Word, PDF, UDF ya da fotoğraf</span>
+      </label>
+
+      <div class="akis" id="dAkis" hidden>
+        <ul class="liste" id="dListe"></ul>
+        <label class="metin-dugme ekle-dugme"><input type="file" id="dEkle" class="gizli" multiple accept=".docx,.pdf,.udf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-arti"/></svg>Dosya ekle</label>
+
+        <div class="secim" id="dHedefKutu">
+          <h2 class="bas">Hangi biçime</h2>
+          <div class="hedefler" id="dHedefler" role="radiogroup" aria-label="Hedef biçim"></div>
+        </div>
+
+        <div class="secim" id="dPdfMod" hidden>
+          <h2 class="bas">PDF nasıl aktarılsın</h2>
+          <div class="ikili" role="radiogroup" aria-label="PDF aktarma biçimi">
+            <label class="secenek"><input type="radio" name="pdfMod" value="metin" checked><span class="nokta" aria-hidden="true"></span><span class="secenek-yazi"><b>Düzenlenebilir metin</b><small>Yazı metin olarak aktarılır; taranmış sayfalar resim olur.</small></span></label>
+            <label class="secenek"><input type="radio" name="pdfMod" value="goruntu"><span class="nokta" aria-hidden="true"></span><span class="secenek-yazi"><b>Sayfa görüntüsü</b><small>Sayfalar olduğu gibi resim olarak aktarılır; yazı düzenlenemez.</small></span></label>
+          </div>
+        </div>
+
+      </div>
+      <p class="uyari-kutu" id="dUyari" hidden></p>
+      <p class="mahrem"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-kilit"/></svg>Dosyalar bu cihazda işlenir, hiçbir yere gönderilmez.</p>
+    </section>
+
+    <!-- Birleştir -->
+    <section class="pano" id="panoBirlestir" data-pano="birlestir" aria-labelledby="sekmeBirlestir" hidden>
+      <label class="birak" id="bBirak">
+        <input type="file" id="bSec" class="gizli" multiple accept=".docx,.pdf,.udf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+        <span class="birak-ikon"><svg class="ikon" aria-hidden="true"><use href="#i-birlestir"/></svg></span>
+        <b>Birleştirilecek dosyaları seçin</b>
+        <span>PDF, Word, UDF ve fotoğraflar tek PDF olur</span>
+      </label>
+
+      <div class="akis" id="bAkis" hidden>
+        <ul class="liste" id="bListe"></ul>
+        <label class="metin-dugme ekle-dugme"><input type="file" id="bEkle" class="gizli" multiple accept=".docx,.pdf,.udf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-arti"/></svg>Dosya ekle</label>
+        <div class="alan" id="bAdKutu">
+          <label for="bAd">Birleşik dosyanın adı</label>
+          <div class="alan-satir"><input type="text" id="bAd" value="birlesik" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done"><span class="uzanti">.pdf</span></div>
+        </div>
+        <div class="sonuc" id="bSonuc" hidden></div>
+      </div>
+      <p class="uyari-kutu" id="bUyari" hidden></p>
+      <p class="mahrem"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-kilit"/></svg>Dosyalar bu cihazda işlenir, hiçbir yere gönderilmez.</p>
+    </section>
+
+    <!-- İmzala -->
+    <section class="pano" id="panoImzala" data-pano="imzala" aria-labelledby="sekmeImzala" hidden>
+      <label class="birak" id="iBirak">
+        <input type="file" id="iSec" class="gizli" accept=".docx,.pdf,.udf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+        <span class="birak-ikon"><svg class="ikon" aria-hidden="true"><use href="#i-imza"/></svg></span>
+        <b>İmzalanacak belgeyi seçin</b>
+        <span>İmzanızı parmağınızla atıp belgenin üzerine yerleştirin</span>
+      </label>
+
+      <div class="akis imza-akis" id="iAkis" hidden>
+        <div class="imza-ust">
+          <p class="dosya-adi" id="iAd"></p>
+          <button type="button" class="dugme dugme-kucuk dugme-sade" id="iKapat"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-kapat"/></svg><span>Kapat</span></button>
+        </div>
+        <div class="sayfa-alan" id="iAlan">
+          <div class="sayfa-kutu" id="iKutu"><canvas id="iTuval"></canvas></div>
+        </div>
+        <div class="sayfa-gez">
+          <button type="button" class="yuvarlak" id="iOnceki" aria-label="Önceki sayfa"><svg class="ikon" aria-hidden="true"><use href="#i-sol"/></svg></button>
+          <span id="iSayfa" aria-live="polite"></span>
+          <button type="button" class="yuvarlak" id="iSonraki" aria-label="Sonraki sayfa"><svg class="ikon" aria-hidden="true"><use href="#i-sag"/></svg></button>
+        </div>
+        <div class="imza-araclar">
+          <button type="button" class="dugme" id="iEkle"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-imza"/></svg><span>İmza ekle</span></button>
+          <button type="button" class="dugme dugme-sade" id="iYeni"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-kalem"/></svg><span>Yeni imza çiz</span></button>
+          <button type="button" class="dugme dugme-sade" id="iHepsine" hidden><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-kopya"/></svg><span>Tüm sayfalara koy</span></button>
+        </div>
+        <p class="kucuk" id="iIpucu">İmzayı sürükleyerek taşıyın, köşesinden tutup büyütün ya da küçültün.</p>
+        <div class="sonuc" id="iSonuc" hidden></div>
+      </div>
+      <p class="uyari-kutu" id="iUyari" hidden></p>
+      <p class="hukuk-notu" id="iNot">Bu bölüm, parmakla atılan imzanın görüntüsünü belgeye yerleştirir. Bu görüntü, 5070 sayılı Elektronik İmza Kanunu'nun 4. maddesinde tanımlanan güvenli elektronik imza değildir.</p>
+    </section>
+
+    <noscript><p class="uyari-kutu">Bu uygulamanın çalışması için tarayıcıda JavaScript açık olmalıdır.</p></noscript>
+  </main>
+
+  <div class="eylem" id="eylem" hidden>
+    <button type="button" class="dugme dugme-ana dugme-genis" id="eylemDugme"></button>
+  </div>
+
+  <nav class="sekmeler" aria-label="Bölümler" role="tablist">
+    <button type="button" role="tab" id="sekmeDonustur" data-sekme="donustur" aria-selected="true"><svg class="ikon" aria-hidden="true"><use href="#i-donustur"/></svg><span>Dönüştür</span></button>
+    <button type="button" role="tab" id="sekmeBirlestir" data-sekme="birlestir" aria-selected="false"><svg class="ikon" aria-hidden="true"><use href="#i-birlestir"/></svg><span>Birleştir</span></button>
+    <button type="button" role="tab" id="sekmeImzala" data-sekme="imzala" aria-selected="false"><svg class="ikon" aria-hidden="true"><use href="#i-imza"/></svg><span>İmzala</span></button>
+  </nav>
+</div>
+
+<!-- İmza çizme penceresi -->
+<dialog class="pencere" id="imzaPencere" aria-labelledby="imzaBaslik">
+  <div class="pencere-bas">
+    <h2 id="imzaBaslik">İmzanızı Atın</h2>
+    <button type="button" class="simge-dugme" id="imzaKapat" aria-label="Kapat"><svg class="ikon" aria-hidden="true"><use href="#i-kapat"/></svg></button>
+  </div>
+  <div class="pencere-govde">
+    <div class="imza-kagit"><canvas id="imzaTuval" aria-label="İmza alanı"></canvas><span class="imza-cizgi" aria-hidden="true"></span><span class="imza-yer" id="imzaYer">Parmağınızla ya da kalemle buraya imzalayın</span></div>
+    <div class="imza-secenek">
+      <div class="murekkep" role="radiogroup" aria-label="Mürekkep rengi">
+        <label><input type="radio" name="murekkep" value="#1b2a6b" checked><span class="renk" style="--renk:#1b2a6b"></span>Lacivert</label>
+        <label><input type="radio" name="murekkep" value="#111111"><span class="renk" style="--renk:#111111"></span>Siyah</label>
+      </div>
+      <button type="button" class="dugme dugme-kucuk dugme-sade" id="imzaTemizle"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-sil"/></svg><span>Temizle</span></button>
+    </div>
+    <label class="anahtar">
+      <span class="anahtar-yazi"><b>İmzayı bu cihazda sakla</b><small>Sonraki belgelerde yeniden çizmeden kullanılır. Yalnızca bu cihazda durur.</small></span>
+      <input type="checkbox" id="imzaSakla" checked>
+      <span class="anahtar-kol" aria-hidden="true"></span>
+    </label>
+    <button type="button" class="dugme dugme-ana dugme-genis" id="imzaKullan" disabled>Bu imzayı kullan</button>
+  </div>
+</dialog>
+
+<!-- Bilgi penceresi -->
+<dialog class="pencere" id="bilgiPencere" aria-labelledby="bilgiBaslik">
+  <div class="pencere-bas">
+    <h2 id="bilgiBaslik">Belge Dönüştür</h2>
+    <button type="button" class="simge-dugme" id="bilgiKapat" aria-label="Kapat"><svg class="ikon" aria-hidden="true"><use href="#i-kapat"/></svg></button>
+  </div>
+  <div class="pencere-govde">
+    <section class="bolum">
+      <h3 class="bas">Neler yapar</h3>
+      <ul class="donusumler">
+        <li><b>Word</b><span>PDF, UDF</span></li>
+        <li><b>PDF</b><span>Word, UDF</span></li>
+        <li><b>UDF</b><span>Word, PDF</span></li>
+        <li><b>JPEG, PNG</b><span>PDF, Word, UDF, JPEG, PNG</span></li>
+      </ul>
+      <p class="kucuk">Birleştir bölümü PDF, Word, UDF ve fotoğrafları seçtiğiniz sırayla tek PDF yapar. İmzala bölümü parmakla atılan imzayı belgeye yerleştirir.</p>
+    </section>
+    <section class="bolum">
+      <h3 class="bas">Gizlilik</h3>
+      <p class="kucuk">Bütün işlemler bu cihazın içinde yapılır. Seçtiğiniz dosyalar internete gönderilmez, uygulamada da saklanmaz; ekranı kapattığınızda silinir.</p>
+    </section>
+    <section class="bolum">
+      <h3 class="bas">Bilinmesi gerekenler</h3>
+      <p class="kucuk">Dilekçe gibi yazı ağırlıklı belgelerde paragraflar, kalın ve italik yazı, hizalama, sekmeler, tablolar ve resimler korunur. Metin kutusu, çok sütunlu sayfa, şekil gibi karmaşık düzenler sadeleşir. PDF'den Word'e ve UDF'ye geçişte yazı yeniden paragraflara ayrılır; tablolar sütun boşluklarıyla düz metin olur, PDF'nin içindeki resimler aktarılmaz. Sayfayı olduğu gibi isterseniz “Sayfa görüntüsü” seçeneğini kullanın. Eski .doc dosyalarını önce Word'de .docx olarak kaydedin.</p>
+      <p class="kucuk">Elektronik imzalı bir UDF ya da PDF başka biçime çevrildiğinde üzerindeki elektronik imza yeni dosyaya geçmez.</p>
+    </section>
+    <section class="bolum" id="sakliImzaBolum" hidden>
+      <h3 class="bas">Saklanan imza</h3>
+      <div class="sakli-imza"><img id="sakliImzaResim" alt="Saklanan imza"><button type="button" class="dugme dugme-kucuk" id="sakliImzaSil"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-sil"/></svg><span>İmzayı sil</span></button></div>
+    </section>
+    <section class="bolum" id="kurulum" hidden>
+      <h3 class="bas">Uygulama olarak ekleme</h3>
+      <p class="kucuk" id="kurulumYazi"></p>
+    </section>
+  </div>
+</dialog>
+
+<div class="bildirim" id="bildirim" role="status" aria-live="polite" hidden></div>
+
+<script src="motor/temel.js"></script>
+<script src="motor/udf.js"></script>
+<script src="motor/docx-oku.js"></script>
+<script src="motor/docx-yaz.js"></script>
+<script src="motor/pdf-yaz.js"></script>
+<script src="motor/pdf-oku.js"></script>
+<script src="motor/islem.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

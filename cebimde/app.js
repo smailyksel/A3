@@ -8,7 +8,7 @@
 
   const VERI_ANAHTAR = 'cebimde.veri.v1';
   const CIHAZ_ANAHTAR = 'cebimde.cihaz.v1';
-  const SURUM = '1.1';
+  const SURUM = '1.2';
   const YAKIN_GUN = 14;                  // bu kadar gün ve azı kalan tarihler öne çıkarılır
   const ROZET_GUN = 7;                   // bu kadar gün ve azı kalanlar ilk ekranda ve sekmede haber verilir
   const DOSYA_SINIRI = 20 * 1024 * 1024; // tek dosya için üst sınır
@@ -530,11 +530,15 @@
       const satirlar = n.metin.trim().split('\n');
       const baslik = n.baslik.trim() || satirlar[0].slice(0, 80);
       const govde = n.baslik.trim() ? n.metin.trim() : satirlar.slice(1).join('\n').trim();
-      return `<button type="button" class="kart not-kart${n.sabit ? ' sabit' : ''}" data-act="not-ac" data-id="${n.id}">
-        <h3>${n.sabit ? ikon('igne', 'ikon-k') : ''}<span>${esc(baslik)}</span></h3>
-        <p>${esc(govde.slice(0, 400))}</p>
-        <time>${esc(yakinTarih(n.g || n.olusturma || simdi()))}</time>
-      </button>`;
+      return `<div class="not-sar">
+        <button type="button" class="not-sil" data-act="not-kaydir-sil" data-id="${n.id}" tabindex="-1" aria-hidden="true">${ikon('cop')}<span>Sil</span></button>
+        <button type="button" class="kart not-kart${n.sabit ? ' sabit' : ''}" data-act="not-ac" data-id="${n.id}">
+          <h3>${n.sabit ? ikon('igne', 'ikon-k') : ''}<span>${esc(baslik)}</span></h3>
+          <p>${esc(govde.slice(0, 400))}</p>
+          <time>${esc(yakinTarih(n.g || n.olusturma || simdi()))}</time>
+        </button>
+        <button type="button" class="simge-dugme not-cop" data-act="not-kaydir-sil" data-id="${n.id}" aria-label="Sil: ${esc(baslik)}">${ikon('cop')}</button>
+      </div>`;
     }).join('')}</div>`;
   }
 
@@ -759,6 +763,7 @@
     $('#ustEkle').hidden = !yazi;
     $('#yuzenEkle').hidden = !yazi;
     if (yazi) { $('#ustEkleYazi').textContent = yazi; $('#yuzenEkle').setAttribute('aria-label', yazi); }
+    acikSar = null;
     $('#icerik').innerHTML = CIZIMLER[gorunum]();
   }
 
@@ -1212,8 +1217,12 @@
     },
     'kur-not-kapat'() { cihaz.kurNotKapali = true; depoYaz(CIHAZ_ANAHTAR, JSON.stringify(cihaz)); ciz(); },
 
-    'not-ac': el => notPenceresi(el.dataset.id),
+    'not-ac'(el) {
+      if (acikSar) { sarKapat(); return; } // Sil düğmesi açıkken nota dokunmak yalnızca satırı kapatır
+      notPenceresi(el.dataset.id);
+    },
     'not-sil': el => kayitSil('notlar', el.dataset.id, 'Not silindi.', 'sil'),
+    'not-kaydir-sil'(el) { acikSar = null; kayitSil('notlar', el.dataset.id, 'Not silindi.', 'sil'); },
 
     tur(el) { ui.tur = el.dataset.tur; ciz(); },
     'kart-ornek'(el) { const o = KART_ORNEK[Number(el.dataset.sira)]; if (o) kartPenceresi(null, o); },
@@ -1283,9 +1292,72 @@
     },
   };
 
+  /* ---------- Notu kaydırarak silme ---------- */
+
+  // Parmakla sola kaydırılan notun arkasından Sil düğmesi çıkar. Yarıdan fazla açılırsa açık kalır;
+  // başka bir yere dokunulunca ya da not geri itilince kapanır. Fareyle kaydırma yoktur.
+  const KAYDIR = 84;
+  let kaydir = null, acikSar = null, tiklamaYut = false;
+
+  function sarDurum(sar, acik) {
+    sar.classList.toggle('acik', acik);
+    const kart = $('.not-kart', sar), dugme = $('.not-sil', sar);
+    if (kart) kart.style.clipPath = kart.style.webkitClipPath = '';
+    if (dugme) { dugme.tabIndex = acik ? 0 : -1; dugme.setAttribute('aria-hidden', String(!acik)); }
+  }
+  function sarKapat() {
+    if (acikSar && acikSar.isConnected) sarDurum(acikSar, false);
+    acikSar = null;
+  }
+
+  document.addEventListener('pointerdown', e => {
+    const kart = e.target.closest ? e.target.closest('.not-sar .not-kart') : null;
+    tiklamaYut = false;
+    // Bir satır açıkken başka yere dokunmak yalnızca o satırı kapatır; bu dokunuş başka işlem başlatmaz.
+    if (acikSar && !acikSar.contains(e.target)) { sarKapat(); tiklamaYut = true; }
+    if (!kart || e.pointerType === 'mouse') return;
+    kaydir = { sar: kart.parentElement, kart, id: e.pointerId, x0: e.clientX, y0: e.clientY, taban: kart.parentElement === acikSar ? -KAYDIR : 0, x: 0, yatay: false };
+  }, { passive: true });
+
+  document.addEventListener('pointermove', e => {
+    if (!kaydir || e.pointerId !== kaydir.id) return;
+    const dx = e.clientX - kaydir.x0, dy = e.clientY - kaydir.y0;
+    if (!kaydir.yatay) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { kaydir = null; return; } // dikey hareket: sayfa kayar
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;
+      kaydir.yatay = true;
+      if (acikSar && acikSar !== kaydir.sar) sarKapat();
+      kaydir.sar.classList.add('surukleniyor');
+      try { kaydir.kart.setPointerCapture(e.pointerId); } catch (err) { /* yakalanamasa da sürükleme sürer */ }
+    }
+    let x = kaydir.taban + dx;
+    if (x > 0) x = 0;
+    if (x < -KAYDIR) x = -KAYDIR + (x + KAYDIR) * 0.2; // sınırın ötesinde direnç
+    kaydir.x = x;
+    // Kart yerinden oynamaz; sağ yanı parmakla birlikte açılır, yazı okunur kalır.
+    kaydir.kart.style.clipPath = kaydir.kart.style.webkitClipPath = `inset(0 ${-x}px 0 0 round 8px)`;
+  }, { passive: true });
+
+  function kaydirBitir(e) {
+    if (!kaydir || e.pointerId !== kaydir.id) return;
+    const k = kaydir;
+    kaydir = null;
+    if (!k.yatay) return;
+    k.sar.classList.remove('surukleniyor');
+    tiklamaYut = true; // sürüklemenin ardından gelebilecek tıklama işlem başlatmasın
+    setTimeout(() => { tiklamaYut = false; }, 80);
+    const ac = k.x < -KAYDIR / 2;
+    sarDurum(k.sar, ac);
+    acikSar = ac ? k.sar : (acikSar === k.sar ? null : acikSar);
+  }
+  document.addEventListener('pointerup', kaydirBitir);
+  document.addEventListener('pointercancel', kaydirBitir);
+
   /* ---------- Olaylar ---------- */
 
   document.addEventListener('click', e => {
+    // Kaydırmanın ya da açık satırı kapatan dokunuşun ardından gelen tıklama işlem başlatmaz.
+    if (tiklamaYut && !e.target.closest('.not-sil')) { tiklamaYut = false; e.preventDefault(); return; }
     const hedef = e.target.closest('[data-git]');
     if (hedef) { git(hedef.dataset.git); return; }
     const el = e.target.closest('[data-act]');
@@ -1315,6 +1387,7 @@
     if (e.target.id !== 'ara' || !LISTELER[gorunum]) return;
     ui.ara[gorunum] = e.target.value;
     const k = $('#liste');
+    acikSar = null;
     if (k) k.innerHTML = LISTELER[gorunum]();
   });
 

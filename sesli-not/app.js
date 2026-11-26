@@ -199,7 +199,10 @@
 
     const aranan = arama.trim().toLocaleLowerCase('tr');
     const gorunen = aranan ? notlar.filter(n => (n.metin || '').toLocaleLowerCase('tr').includes(aranan)) : notlar;
-    liste.innerHTML = gorunen.map(n => `<li><button type="button" class="not kart" data-act="ac" data-id="${n.id}">${kartIci(n)}</button></li>`).join('');
+    acikSar = null;
+    // Sil düğmesi data-id taşımaz; kartGuncelle listede kartı data-id ile arar.
+    liste.innerHTML = gorunen.map(n => `<li class="kaydir"><button type="button" class="not kart" data-act="ac" data-id="${n.id}">${kartIci(n)}</button>`
+      + `<button type="button" class="kaydir-sil" data-act="kaydir-sil" data-kayit="${n.id}" tabindex="-1" aria-hidden="true">${ikon('cop')}<span>Sil</span></button></li>`).join('');
 
     if (!notlar.length) {
       const m = MODELLER[ayar.model];
@@ -1064,12 +1067,77 @@
     dosyaVer(new File(['﻿' + satirlar.join('\n\n') + '\n'], ad, { type: 'text/plain' }));
   }
 
+  /* ---------- Kaydı kaydırarak silme ---------- */
+
+  // Parmakla sola kaydırılan kaydın arkasından Sil düğmesi çıkar. Yarıdan fazla açılırsa açık kalır;
+  // başka bir yere dokunulunca ya da kayıt geri itilince kapanır. Fareyle kaydırma yoktur.
+  const KAYDIR = 84;
+  let kaydir = null, acikSar = null, tiklamaYut = false;
+
+  function sarDurum(sar, acik) {
+    sar.classList.toggle('acik', acik);
+    const kart = $('.not', sar), dugme = $('.kaydir-sil', sar);
+    if (kart) kart.style.clipPath = kart.style.webkitClipPath = '';
+    if (dugme) { dugme.tabIndex = acik ? 0 : -1; dugme.setAttribute('aria-hidden', String(!acik)); }
+  }
+  function sarKapat() {
+    if (acikSar && acikSar.isConnected) sarDurum(acikSar, false);
+    acikSar = null;
+  }
+
+  document.addEventListener('pointerdown', e => {
+    const kart = e.target.closest ? e.target.closest('.kaydir .not') : null;
+    tiklamaYut = false;
+    // Bir satır açıkken başka yere dokunmak yalnızca o satırı kapatır; bu dokunuş başka işlem başlatmaz.
+    if (acikSar && !acikSar.contains(e.target)) { sarKapat(); tiklamaYut = true; }
+    if (!kart || e.pointerType === 'mouse') return;
+    kaydir = { sar: kart.parentElement, kart, id: e.pointerId, x0: e.clientX, y0: e.clientY, taban: kart.parentElement === acikSar ? -KAYDIR : 0, x: 0, yatay: false };
+  }, { passive: true });
+
+  document.addEventListener('pointermove', e => {
+    if (!kaydir || e.pointerId !== kaydir.id) return;
+    const dx = e.clientX - kaydir.x0, dy = e.clientY - kaydir.y0;
+    if (!kaydir.yatay) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { kaydir = null; return; } // dikey hareket: sayfa kayar
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;
+      kaydir.yatay = true;
+      if (acikSar && acikSar !== kaydir.sar) sarKapat();
+      kaydir.sar.classList.add('surukleniyor');
+      try { kaydir.kart.setPointerCapture(e.pointerId); } catch (err) { /* yakalanamasa da sürükleme sürer */ }
+    }
+    let x = kaydir.taban + dx;
+    if (x > 0) x = 0;
+    if (x < -KAYDIR) x = -KAYDIR + (x + KAYDIR) * 0.2; // sınırın ötesinde direnç
+    kaydir.x = x;
+    // Kart yerinden oynamaz; sağ yanı parmakla birlikte açılır, yazı okunur kalır.
+    kaydir.kart.style.clipPath = kaydir.kart.style.webkitClipPath = `inset(0 ${-x}px 0 0 round 8px)`;
+  }, { passive: true });
+
+  function kaydirBitir(e) {
+    if (!kaydir || e.pointerId !== kaydir.id) return;
+    const k = kaydir;
+    kaydir = null;
+    if (!k.yatay) return;
+    k.sar.classList.remove('surukleniyor');
+    tiklamaYut = true; // sürüklemenin ardından gelebilecek tıklama işlem başlatmasın
+    setTimeout(() => { tiklamaYut = false; }, 80);
+    const ac = k.x < -KAYDIR / 2;
+    sarDurum(k.sar, ac);
+    acikSar = ac ? k.sar : (acikSar === k.sar ? null : acikSar);
+  }
+  document.addEventListener('pointerup', kaydirBitir);
+  document.addEventListener('pointercancel', kaydirBitir);
+
   /* ---------- Olaylar ---------- */
 
   document.addEventListener('click', async e => {
+    // Kaydırmanın ya da açık satırı kapatan dokunuşun ardından gelen tıklama işlem başlatmaz.
+    if (tiklamaYut && !e.target.closest('.kaydir-sil')) { tiklamaYut = false; e.preventDefault(); return; }
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const act = b.dataset.act;
+    if (act === 'kaydir-sil') { sarKapat(); notSil(b.dataset.kayit); return; }
+    if (act === 'ac' && acikSar) { sarKapat(); return; } // Sil düğmesi açıkken kayda dokunmak yalnızca satırı kapatır
     if (act === 'kayit') kayitBasla();
     else if (act === 'kayit-bitir') kayitBitir();
     else if (act === 'kayit-iptal') kayitIptal();

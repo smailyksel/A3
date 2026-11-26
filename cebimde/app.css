@@ -87,6 +87,7 @@
   --vurgu-zemin: rgba(207, 168, 90, 0.12);
   --uyari: #e2907f;
   --uyari-cizgi: rgba(226, 144, 127, 0.5);
+  --sil: #b83a2e;
 }
 
 /* ---------- Temel ---------- */
@@ -378,6 +379,35 @@ input[type="search"]::-webkit-search-cancel-button { filter: invert(0.75); }
 .not-metin { min-height: 40vh; }
 .not-baslik { font-weight: 600; }
 @media (min-width: 700px) { .notlar { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; } }
+
+/* Telefonda notlar alt alta satır olarak dizilir. Satır sola kaydırılınca kartın sağ yanı açılır ve
+   arkasındaki Sil düğmesi görünür; kart yerinden oynamadığı için notun yazısı okunur kalır. */
+.not-sar { position: relative; display: flex; min-width: 0; border-radius: var(--r); overflow: hidden; }
+.not-sar .not-kart {
+  position: relative; z-index: 1; flex: 1; min-width: 0;
+  touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-clip-path: inset(0 0 0 0 round 8px); clip-path: inset(0 0 0 0 round 8px);
+  transition: clip-path 0.2s ease, -webkit-clip-path 0.2s ease;
+}
+.not-sar.surukleniyor .not-kart { transition: none; }
+.not-sar.acik .not-kart { -webkit-clip-path: inset(0 84px 0 0 round 8px); clip-path: inset(0 84px 0 0 round 8px); }
+.not-sil {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 132px; padding-left: 48px;
+  display: grid; place-content: center; justify-items: center; gap: 3px;
+  background: var(--sil); color: #fff; font-size: 0.8125rem; font-weight: 600;
+  visibility: hidden; transition: visibility 0s 0.2s;
+}
+.not-sil .ikon { width: 22px; height: 22px; }
+.not-sar.acik .not-sil, .not-sar.surukleniyor .not-sil { visibility: visible; transition-delay: 0s; }
+.not-cop { position: absolute; z-index: 2; right: 6px; bottom: 6px; width: 36px; height: 36px; opacity: 0; }
+.not-cop:hover { color: var(--uyari); }
+@media (hover: hover) { .not-sar:hover .not-cop, .not-cop:focus-visible { opacity: 1; } }
+@media (hover: none) { .not-cop { display: none; } }
+@media (max-width: 699px) {
+  .notlar { grid-template-columns: minmax(0, 1fr); }
+  .not-kart { min-height: 0; padding: 13px 14px 12px; gap: 4px; }
+  .not-kart p { -webkit-line-clamp: 2; line-clamp: 2; }
+}
 
 /* ---------- Tıbbi kayıtlar ve dekontlar ---------- */
 

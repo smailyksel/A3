@@ -4,7 +4,7 @@
    burada değil, tarayıcı deposunda durur.
    Dosyalarda değişiklik yapıldığında SURUM artırılmalıdır. */
 
-const SURUM = 'seslendir-v3';
+const SURUM = 'seslendir-v4';
 
 const DOSYALAR = [
   './',
@@ -25,6 +25,8 @@ const DOSYALAR = [
   'fonts/hanken-grotesk-latin-ext-600-normal.woff2',
   'fonts/marcellus-latin-400-normal.woff2',
   'fonts/marcellus-latin-ext-400-normal.woff2',
+  'pdf/pdf.min.mjs',
+  'pdf/pdf.worker.min.mjs',
 ];
 
 const KAPSAM = new URL('./', self.location).pathname;
@@ -78,6 +80,6 @@ self.addEventListener('fetch', e => {
   const url = new URL(istek.url);
   if (url.origin !== self.location.origin || !url.pathname.startsWith(KAPSAM)) return;
   if (istek.mode === 'navigate') { e.respondWith(agOnce(istek, './')); return; }
-  if (/\.(woff2|png)$/.test(url.pathname)) { e.respondWith(kopyaOnce(istek)); return; }
+  if (/\.(woff2|png|mjs)$/.test(url.pathname)) { e.respondWith(kopyaOnce(istek)); return; }
   e.respondWith(agOnce(istek));
 });

@@ -17,6 +17,7 @@
   const el = {
     uyg: $('uyg'), metin: $('metin'), okuma: $('okuma'), ozet: $('ozet'), bosYardim: $('bosYardim'),
     yapistir: $('yapistir'), temizle: $('temizle'), ornek: $('ornek'), duzenle: $('duzenle'),
+    dosyaAc: $('dosyaAc'), dosya: $('dosya'),
     yer: $('yer'), yerYazi: $('yerYazi'), kalan: $('kalan'),
     hiz: $('hiz'), hizYazi: $('hizYazi'), geri: $('geri'), oynat: $('oynat'), ileri: $('ileri'), bastan: $('bastan'),
     sesSatiri: $('sesSatiri'), sesYazi: $('sesYazi'),
@@ -61,6 +62,7 @@
     dinle: false,     // okuma görünümü açık mı
     cps: 14,          // saniyede okunan harf (1× hızda), okudukça ölçülür
     seslerGeldi: false,
+    dosyaAdi: depo.al('seslendir.dosya') || '',   // açılan belgenin adı
   };
 
   /* ---------- Metni okunacak parçalara ayırma ---------- */
@@ -986,6 +988,12 @@
       el.kalan.textContent = '';
       const uz = el.metin.value.trim().length;
       el.ozet.textContent = '';
+      if (uz && S.dosyaAdi) {
+        const ad = document.createElement('span');
+        ad.className = 'ozet-dosya';
+        ad.textContent = S.dosyaAdi + ' · ';
+        el.ozet.appendChild(ad);
+      }
       if (uz) {
         const adet = document.createElement('span');
         adet.className = 'ozet-sayi';
@@ -1072,10 +1080,175 @@
     else depo.sil('seslendir.yer');
   }
 
-  function metniKoy(yazi) {
+  function metniKoy(yazi, dosyaAdi) {
     el.metin.value = yazi;
     el.metin.scrollTop = 0;
+    S.dosyaAdi = dosyaAdi || '';
+    if (S.dosyaAdi) depo.yaz('seslendir.dosya', S.dosyaAdi); else depo.sil('seslendir.dosya');
     metinDegisti();
+  }
+
+  /* ---------- Dosya açma ---------- */
+
+  // Dosyalar uygulamasından (iCloud, Google Drive ve diğer konumlar) metin,
+  // PDF, Word (.docx) ve UYAP (.udf) belgeleri açılır; metni çıkarılıp
+  // okuma alanına konur. Dosya cihazdan çıkmaz.
+
+  let pdfKitap = null;
+  function pdfYukle() {
+    return pdfKitap || (pdfKitap = import('./pdf/pdf.min.mjs').then(m => {
+      m.GlobalWorkerOptions.workerSrc = new URL('pdf/pdf.worker.min.mjs', document.baseURI).href;
+      return m;
+    }).catch(e => { pdfKitap = null; throw e; }));
+  }
+
+  function metinCoz(buf) {
+    const u8 = new Uint8Array(buf);
+    if (u8.length >= 2 && u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8);
+    if (u8.length >= 2 && u8[0] === 0xfe && u8[1] === 0xff) return new TextDecoder('utf-16be').decode(u8);
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(u8); }
+    catch (e) { return new TextDecoder('windows-1254').decode(u8); }
+  }
+
+  // Sayfadaki yazı parçaları satırlara ve paragraflara toplanır; yalnız
+  // sayfa numarasından oluşan satırlar atılır.
+  async function pdfMetni(buf) {
+    const pdfjs = await pdfYukle();
+    const belge = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
+    const sayfalar = [];
+    for (let n = 1; n <= belge.numPages; n++) {
+      const sayfa = await belge.getPage(n);
+      const icerik = await sayfa.getTextContent();
+      const satirlar = [];
+      let satir = '', sonY = null, sonYuk = 0, sonX = null;
+      icerik.items.forEach(x => {
+        if (typeof x.str !== 'string') return;
+        const y = x.transform ? x.transform[5] : 0;
+        const xk = x.transform ? x.transform[4] : 0;
+        const yuk = x.height || sonYuk || 10;
+        if (sonY !== null) {
+          const fark = Math.abs(y - sonY);
+          if (fark > yuk * 0.5) {
+            if (satir) satirlar.push(satir);
+            if (fark > yuk * 1.9) satirlar.push('');
+            satir = '';
+          } else if (satir && sonX !== null && xk - sonX > yuk * 0.25 && !/\s$/.test(satir) && !/^\s/.test(x.str)) satir += ' ';
+        }
+        satir += x.str;
+        sonY = y; sonYuk = yuk; sonX = xk + (x.width || 0);
+        if (x.hasEOL) { satirlar.push(satir); satir = ''; }
+      });
+      if (satir) satirlar.push(satir);
+      const temiz = satirlar.map(t => t.replace(/\s+/g, ' ').trim())
+        .filter(t => !/^(sayfa\s*)?\d{1,4}(\s*[\/-]\s*\d{1,4})?$/i.test(t));
+      sayfalar.push(temiz.join('\n'));
+    }
+    try { belge.destroy(); } catch (e) { /* önemsiz */ }
+    return sayfalar.join('\n\n').replace(/\n{3,}/g, '\n\n');
+  }
+
+  // Zip paketinden (docx, udf) tek bir dosyayı çıkarır.
+  async function zipDosyasi(buf, aranan) {
+    const dv = new DataView(buf);
+    const u8 = new Uint8Array(buf);
+    let eocd = -1;
+    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('zip değil');
+    const adet = dv.getUint16(eocd + 10, true);
+    let p = dv.getUint32(eocd + 16, true);
+    const td = new TextDecoder('utf-8');
+    for (let k = 0; k < adet; k++) {
+      if (p + 46 > u8.length || dv.getUint32(p, true) !== 0x02014b50) break;
+      const yontem = dv.getUint16(p + 10, true);
+      const sikisik = dv.getUint32(p + 20, true);
+      const adUz = dv.getUint16(p + 28, true), ekUz = dv.getUint16(p + 30, true), yorumUz = dv.getUint16(p + 32, true);
+      const yerel = dv.getUint32(p + 42, true);
+      const ad = td.decode(u8.subarray(p + 46, p + 46 + adUz));
+      p += 46 + adUz + ekUz + yorumUz;
+      if (ad !== aranan) continue;
+      const bas = yerel + 30 + dv.getUint16(yerel + 26, true) + dv.getUint16(yerel + 28, true);
+      const veri = u8.subarray(bas, bas + sikisik);
+      if (yontem === 0) return veri;
+      if (yontem === 8) {
+        if (typeof DecompressionStream !== 'function') throw new Error('Bu tarayıcı sıkıştırılmış belgeleri açamıyor.');
+        const akis = new Blob([veri]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        return new Uint8Array(await new Response(akis).arrayBuffer());
+      }
+      throw new Error('desteklenmeyen sıkıştırma');
+    }
+    return null;
+  }
+
+  const xmlOku = u8 => new DOMParser().parseFromString(new TextDecoder('utf-8').decode(u8), 'application/xml');
+
+  async function docxMetni(buf) {
+    const veri = await zipDosyasi(buf, 'word/document.xml');
+    if (!veri) throw new Error('Word belgesi okunamadı.');
+    const dom = xmlOku(veri);
+    const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    const paragraflar = dom.getElementsByTagNameNS(W, 'p');
+    const sonuc = [];
+    for (let i = 0; i < paragraflar.length; i++) {
+      let t = '';
+      const gez = d => {
+        for (let c = d.firstChild; c; c = c.nextSibling) {
+          if (c.nodeType !== 1) continue;
+          const ad = c.localName;
+          if (ad === 't') t += c.textContent;
+          else if (ad === 'tab') t += ' ';
+          else if (ad === 'br' || ad === 'cr') t += '\n';
+          else if (ad !== 'del' && ad !== 'instrText') gez(c);
+        }
+      };
+      gez(paragraflar[i]);
+      sonuc.push(t.replace(/[ \t]+/g, ' ').trim());
+    }
+    return sonuc.join('\n').replace(/\n{3,}/g, '\n\n');
+  }
+
+  async function udfMetni(buf) {
+    const veri = await zipDosyasi(buf, 'content.xml');
+    if (!veri) throw new Error('UYAP belgesi okunamadı.');
+    const dom = xmlOku(veri);
+    const icerik = dom.getElementsByTagName('content')[0];
+    const t = icerik ? icerik.textContent : '';
+    return t.replace(/\r\n?/g, '\n').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  async function dosyadanMetin(dosya) {
+    const ad = (dosya.name || '').toLowerCase();
+    const tip = dosya.type || '';
+    const buf = await dosya.arrayBuffer();
+    if (/\.pdf$/.test(ad) || tip === 'application/pdf') return pdfMetni(buf);
+    if (/\.docx$/.test(ad) || /wordprocessingml/.test(tip)) return docxMetni(buf);
+    if (/\.udf$/.test(ad)) return udfMetni(buf);
+    if (/\.(txt|md|text|markdown)$/.test(ad) || /^text\//.test(tip) || !ad.includes('.')) return metinCoz(buf);
+    if (/\.(doc|rtf|odt|pages)$/.test(ad)) throw new Error('Bu biçim desteklenmiyor. Belgeyi Word’de ya da Pages’te .docx ya da PDF olarak kaydedip yeniden deneyin.');
+    throw new Error('Bu dosya türü desteklenmiyor. Metin, PDF, Word (.docx) ve UYAP (.udf) dosyaları açılabilir.');
+  }
+
+  async function dosyaSecildi() {
+    const dosya = el.dosya.files && el.dosya.files[0];
+    el.dosya.value = '';
+    if (!dosya) return;
+    sustur();
+    S.dinle = false;
+    ciz();
+    bildir('“' + dosya.name + '” okunuyor…');
+    try {
+      const metin = (await dosyadanMetin(dosya)).trim();
+      if (!metin) { bildir('Belgede okunacak yazı bulunamadı. Taranmış bir PDF ise yazı değil görüntü içeriyordur.'); return; }
+      const onceki = el.metin.value;
+      metniKoy(metin, dosya.name);
+      el.metin.blur();
+      const uz = sayi(metin.length) + ' karakter';
+      if (onceki.trim() && onceki !== metin) bildir('“' + dosya.name + '” açıldı · ' + uz, { ad: 'Geri al', is: () => metniKoy(onceki) });
+      else bildir('“' + dosya.name + '” açıldı · ' + uz);
+    } catch (e) {
+      bildir(e && e.message && !/^(zip değil|desteklenmeyen|http)/.test(e.message) && e.message.length < 140 ? e.message : 'Dosya okunamadı. Metin, PDF, Word (.docx) ve UYAP (.udf) dosyaları açılabilir.');
+    }
   }
 
   function yapistir() {
@@ -1132,6 +1305,8 @@
   el.bastan.addEventListener('click', () => git(0));
   el.duzenle.addEventListener('click', duzenle);
   el.yapistir.addEventListener('click', yapistir);
+  el.dosyaAc.addEventListener('click', () => el.dosya.click());
+  el.dosya.addEventListener('change', dosyaSecildi);
   el.temizle.addEventListener('click', temizle);
   el.ornek.addEventListener('click', () => metniKoy(ORNEK));
 

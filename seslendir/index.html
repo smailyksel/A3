@@ -26,6 +26,7 @@
   <symbol id="i-ileri" viewBox="0 0 24 24"><path d="M18 5.5v13"/><path d="M5 6l9 6-9 6z"/></symbol>
   <symbol id="i-bastan" viewBox="0 0 24 24"><path d="M4.6 12.4a7.4 7.4 0 1 0 2.3-5.7"/><path d="M4.4 4.4v4.3h4.3"/></symbol>
   <symbol id="i-ayar" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="i-arti" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-yapistir" viewBox="0 0 24 24"><path d="M9 5H6.5v15.5h11V5H15"/><rect x="9" y="3.5" width="6" height="3.2" rx="1"/><path d="M9.5 11.5h5M9.5 15h3.5"/></symbol>
   <symbol id="i-sil" viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V4.5h5V7M7 7l.8 12.5h8.4L17 7"/></symbol>
   <symbol id="i-kalem" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5l3 3L8 19z"/></symbol>
@@ -49,6 +50,8 @@
   <main class="icerik" id="icerik">
     <div class="araclar">
       <div class="arac-duzen">
+        <button type="button" class="dugme dugme-kucuk dugme-arti" id="dosyaAc" aria-label="Dosya aç"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-arti"/></svg><span>Dosya</span></button>
+        <input type="file" id="dosya" class="gizli" accept=".txt,.md,.pdf,.udf,.docx,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" tabindex="-1" aria-hidden="true">
         <button type="button" class="dugme dugme-kucuk" id="yapistir"><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-yapistir"/></svg><span>Yapıştır</span></button>
         <button type="button" class="dugme dugme-kucuk dugme-sade" id="temizle" hidden><svg class="ikon ikon-k" aria-hidden="true"><use href="#i-sil"/></svg><span>Temizle</span></button>
       </div>

@@ -172,6 +172,8 @@ button { background: none; border: 0; padding: 0; cursor: pointer; text-align: i
 .dugme:hover { border-color: var(--vurgu); }
 .dugme-kucuk { min-height: 38px; padding: 0 12px; font-size: 0.875rem; gap: 7px; }
 .dugme-kucuk .ikon { color: var(--vurgu); }
+.dugme-arti { border-color: var(--vurgu); background: var(--vurgu-zemin); }
+.dugme-arti .ikon { stroke-width: 2.2; }
 .dugme-sade { border-color: transparent; color: var(--soluk); }
 .dugme-sade .ikon { color: currentColor; }
 .dugme-sade:hover { border-color: transparent; color: var(--yazi); }
@@ -483,6 +485,9 @@ input[type="range"]:disabled::-moz-range-thumb { visibility: hidden; }
 
 @media (max-width: 480px) {
   .ozet-sayi { display: none; }
+  .arac-duzen .dugme-kucuk:not(.dugme-arti) span { display: none; }
+  .arac-duzen .dugme-kucuk:not(.dugme-arti) { padding: 0 11px; gap: 0; }
+  .arac-duzen .dugme-kucuk:not(.dugme-arti) .ikon { width: 18px; height: 18px; }
 }
 
 @media (max-height: 560px) {

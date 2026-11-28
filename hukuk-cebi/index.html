@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hukuk Cebi</title>
+<meta name="description" content="Süre, infaz, vekalet ücreti ve harç, faiz hesabı; duruşma ve süre panosu; adliye rehberi. Kayıtlar yalnızca bu cihazda tutulur.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0e11">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hukuk Cebi">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg class="gizli-svg" aria-hidden="true" focusable="false">
+  <symbol id="i-sure" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M12 13v3l2 1.2"/></symbol>
+  <symbol id="i-infaz" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8.5 3.5v17M12 3.5v17M15.5 3.5v17"/></symbol>
+  <symbol id="i-ucret" viewBox="0 0 24 24"><path d="M12 3.5v17M8 20.5h8M5 7h14"/><path d="M5 7 2.4 13.2a2.8 2.8 0 0 0 5.2 0L5 7zM19 7l-2.6 6.2a2.8 2.8 0 0 0 5.2 0L19 7z"/></symbol>
+  <symbol id="i-faiz" viewBox="0 0 24 24"><path d="M4 20 20 4"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></symbol>
+  <symbol id="i-pano" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M7.5 9h9M7.5 13h9M7.5 17h5"/></symbol>
+  <symbol id="i-rehber" viewBox="0 0 24 24"><path d="M5 4.5h11.5a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h11.5"/><path d="M9 8.5h6"/></symbol>
+  <symbol id="i-geri" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+  <symbol id="i-uyari" viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+  <symbol id="i-arti" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-cop" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12.5h9.4L17.5 7"/></symbol>
+  <symbol id="i-kalem" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5l3 3L8 19z"/></symbol>
+  <symbol id="i-takvim" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M12 11v6M9 14h6"/></symbol>
+  <symbol id="i-kapat" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-tel" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10.75 18h2.5"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+</svg>
+
+<header class="ust">
+  <a class="geri" href="#" data-geri hidden aria-label="Ana sayfa"><svg class="ikon"><use href="#i-geri"/></svg></a>
+  <div class="ust-yazi">
+    <p class="ust-etiket" data-ust-etiket>Av. İsmail Savaş Yüksel</p>
+    <h1 data-baslik>Hukuk Cebi</h1>
+  </div>
+</header>
+
+<main class="icerik" id="icerik" tabindex="-1"></main>
+
+<dialog id="pencere" aria-labelledby="pencere-baslik">
+  <div class="pencere-bas">
+    <h2 id="pencere-baslik"></h2>
+    <button type="button" class="simge" data-kapat aria-label="Kapat"><svg class="ikon"><use href="#i-kapat"/></svg></button>
+  </div>
+  <div class="pencere-govde" id="pencere-govde"></div>
+</dialog>
+
+<div class="bildirim" id="bildirim" role="status" hidden></div>
+
+<script src="hesap.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
    burada değil, uygulamanın kendi deposunda durur.
    Dosyalarda değişiklik yapıldığında SURUM artırılmalıdır. */
 
-const SURUM = 'hukukcebi-v1';
+const SURUM = 'hukukcebi-v2';
 
 const DOSYALAR = [
   './',

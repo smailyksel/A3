@@ -263,6 +263,12 @@
 
   // ---------- Ücret ve harç ----------
 
+  function gruplar() {
+    const m = new Map();
+    for (const k of H.MAKTU_KALEMLER) { if (!m.has(k[3])) m.set(k[3], []); m.get(k[3]).push(k); }
+    return [...m.entries()];
+  }
+
   function kendiKalemler() { return depo.oku('kalemler', []); }
 
   function ucretSayfa(kok) {
@@ -284,7 +290,7 @@
         <div class="kart">
           <label class="alan"><span>Mahkeme / iş</span><select data-alan="mahkeme">
             <option value="">Seçilmedi (yalnızca nispi)</option>
-            ${H.MAKTU_KALEMLER.map(([k, a]) => `<option value="${k}" ${k === d.mahkeme ? 'selected' : ''}>${kac(a)}</option>`).join('')}
+            ${gruplar().map(([g, l]) => `<optgroup label="${kac(g)}">${l.map(([k, a]) => `<option value="${k}" ${k === d.mahkeme ? 'selected' : ''}>${kac(a)}</option>`).join('')}</optgroup>`).join('')}
           </select></label>
           <label class="alan"><span>Dava / takip değeri (TL)</span><input type="text" inputmode="decimal" data-alan="deger" value="${kac(d.deger)}" placeholder="Konusu para değilse boş bırakın"></label>
           <label class="alan"><span>Hüküm / işin bittiği tarih</span><input type="date" data-alan="tarih" value="${kac(d.tarih)}"></label>
@@ -310,7 +316,7 @@
               ${r.nispi ? `<details class="aciklama"><summary>Dilim dilim hesap</summary><div class="tablo-kap"><table class="tablo"><thead><tr><th>Dilim</th><th>Oran</th><th>Tutar</th></tr></thead><tbody>
                 ${r.nispi.satirlar.map(s => `<tr><td>${kac(H.para(s.alt).replace(' TL', ''))} - ${kac(H.para(s.ust))}</td><td>%${s.oran}</td><td>${kac(H.para(s.tutar))}</td></tr>`).join('')}
               </tbody></table></div></details>` : ''}
-              <p class="kaynak">Hukuki yardımın tamamlandığı veya hükmün verildiği tarihteki tarife uygulanır (m.21). Ceza, istinaf ve Yargıtay duruşma ücretleri için Tarife sekmesine kendi doğruladığınız tutarı ekleyebilirsiniz.</p>
+              <p class="kaynak">Hukuki yardımın tamamlandığı veya hükmün verildiği tarihteki tarife uygulanır (m.21). Avukatlık Asgari Ücret Tarifesi, ${kac(r.tarife.kunye)} ve eki.</p>
             </div>
           </section>`;
       };
@@ -355,8 +361,10 @@
         <section class="sonuc" style="margin-top:0">
           <div class="sonuc-bas"><p class="etiket">Yürürlükteki tarife</p><p class="buyuk" style="font-size:1.375rem">${kac(t.ad)}</p><p class="alt-satir">${kac(t.kunye)}</p></div>
           <div class="sonuc-govde">
-            <p class="ara-baslik">İkinci Kısım İkinci Bölüm, maktu ücretler</p>
-            <dl class="liste-dl">${H.MAKTU_KALEMLER.map(([k, a, s]) => `<div><dt>${kac(a)}</dt><dd>${kac(H.para(t.maktu[k]))}<small>${kac(s)}</small></dd></div>`).join('')}</dl>
+            ${gruplar().map(([g, l], i) => `<p class="ara-baslik" ${i ? 'style="margin-top:18px"' : ''}>${kac(g)}</p>
+            <dl class="liste-dl">${l.map(([k, a, s]) => `<div><dt>${kac(a)}</dt><dd>${kac(H.para(t.maktu[k]))}<small>${kac(s)}</small></dd></div>`).join('')}</dl>`).join('')}
+            ${t.davaDisi.length ? `<p class="ara-baslik" style="margin-top:18px">Dava dışı işler, danışma ve iş takibi</p>
+            <dl class="liste-dl">${t.davaDisi.map(([a, v, s]) => `<div><dt>${kac(a)}</dt><dd>${kac(H.para(v))}<small>${kac(s)}</small></dd></div>`).join('')}</dl>` : ''}
             <p class="ara-baslik" style="margin-top:18px">Nispi ücret dilimleri (Üçüncü Kısım)</p>
             <div class="tablo-kap"><table class="tablo"><thead><tr><th>Dilim</th><th>Oran</th></tr></thead><tbody>
               ${(() => { let a = 0; return t.dilimler.map(([dl, o]) => { const s = dl == null ? `${H.para(a)} üzeri` : `Sonraki ${H.para(dl)}`; a += dl || 0; return `<tr><td>${kac(s)}</td><td>%${o}</td></tr>`; }).join(''); })()}
@@ -364,13 +372,13 @@
             <p class="kaynak">İcra takiplerinde ${kac(H.para(t.icraEsik))} tutarına kadar maktu ücret uygulanır (m.11/1).</p>
           </div>
         </section>
-        <p class="grup-baslik">Kendi eklediğim kalemler <small>Ceza mahkemeleri, istinaf, Yargıtay vb.</small></p>
+        <p class="grup-baslik">Kendi kalemlerim <small>Yalnızca bu telefonda</small></p>
         <div class="kayitlar" id="k-liste">${kendi.length ? kendi.map(k => `
           <div class="kayit"><div class="kayit-govde"><b>${kac(k.ad)}</b><p>${kac(H.para(H.sayiOku(k.tutar)))}${k.not ? ' · ' + kac(k.not) : ''}</p></div>
           <div class="kayit-islem"><button type="button" class="simge" data-sil="${kac(k.id)}" aria-label="Sil">${ikon('cop')}</button></div></div>`).join('')
-          : '<p class="bos">Tarife cetvelinden doğruladığınız tutarları buraya ekleyin. Örneğin ağır ceza mahkemesinde takip edilen davalar.</p>'}</div>
+          : '<p class="bos">Sık kullandığınız akdi ücretleri veya notlarınızı buraya ekleyebilirsiniz.</p>'}</div>
         <div class="kart" style="margin-top:12px">
-          <label class="alan"><span>Kalem</span><input type="text" id="k-ad" placeholder="Örneğin Ağır ceza mahkemesi"></label>
+          <label class="alan"><span>Kalem</span><input type="text" id="k-ad" placeholder="Örneğin Boşanma davası akdi ücret"></label>
           <div class="satir">
             <label class="alan"><span>Tutar (TL)</span><input type="text" inputmode="decimal" id="k-tutar" placeholder="0"></label>
             <label class="alan"><span>Not</span><input type="text" id="k-not" placeholder="Sıra no, yıl"></label>
